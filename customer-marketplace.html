@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBridge — Customer Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a3c5e;
+    --accent: #e86c2f;
+    --light: #f5f0ea;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --card-bg: #ffffff;
+    --border: #e5e0d8;
+    --tag-bg: #eef3f8;
+    --green: #16a34a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--light); color: #1a1a1a; }
+
+  /* NAV */
+  nav { background: var(--primary); padding: 0 5%; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 20px rgba(0,0,0,0.15); }
+  .nav-logo { font-family: 'Playfair Display', serif; color: var(--white); font-size: 1.5rem; cursor:pointer; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 0.8rem; }
+  .nav-cta { background: var(--accent); color: white; border: none; padding: 0.55rem 1.4rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: background 0.2s; }
+  .nav-cta:hover { background: #d05a20; }
+  .cart-btn { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 0.5rem 1rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; position: relative; }
+  .cart-badge { background: var(--accent); color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; }
+  .btn-logout-nav { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  .btn-login-nav { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); padding: 0.5rem 1.1rem; border-radius: 6px; font-size: 0.88rem; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; }
+  .btn-login-nav:hover { border-color: white; background: rgba(255,255,255,0.08); }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, var(--primary) 0%, #0f2840 100%); padding: 90px 5% 80px; display: flex; align-items: center; justify-content: space-between; gap: 3rem; min-height: 520px; }
+  .hero-text { flex: 1; max-width: 560px; }
+  .hero-badge { display: inline-block; background: rgba(232,108,47,0.2); color: var(--accent); border: 1px solid rgba(232,108,47,0.4); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1.5rem; }
+  .hero h1 { font-family: 'Playfair Display', serif; color: var(--white); font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1.2; margin-bottom: 1.2rem; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: rgba(255,255,255,0.7); font-size: 1.05rem; line-height: 1.7; margin-bottom: 2.2rem; }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: white; padding: 0.85rem 2rem; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+  .btn-primary:hover { background: #d05a20; transform: translateY(-2px); }
+  .btn-outline { background: transparent; color: white; padding: 0.85rem 2rem; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-outline:hover { border-color: white; background: rgba(255,255,255,0.08); }
+  .hero-visual { flex: 1; display: flex; justify-content: center; }
+  .hero-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 380px; }
+  .mini-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 1.2rem; text-align: center; }
+  .mini-card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .mini-card p { color: rgba(255,255,255,0.8); font-size: 0.82rem; font-weight: 500; }
+  .mini-card .num { color: var(--accent); font-size: 1.4rem; font-weight: 700; display: block; }
+
+  /* SEARCH */
+  .search-section { background: var(--white); padding: 2rem 5%; border-bottom: 1px solid var(--border); }
+  .search-wrap { max-width: 800px; margin: 0 auto; display: flex; gap: 0.75rem; }
+  .search-wrap input { flex: 1; padding: 0.9rem 1.2rem; border: 2px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none; transition: border 0.2s; }
+  .search-wrap input:focus { border-color: var(--primary); }
+  .search-wrap select { padding: 0.9rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; background: white; cursor: pointer; outline: none; }
+  .search-wrap button { background: var(--primary); color: white; padding: 0.9rem 1.8rem; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; }
+  .search-wrap button:hover { background: #0f2840; }
+
+  /* CATEGORIES */
+  .section { padding: 3.5rem 5%; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.8rem; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 1.7rem; color: var(--primary); }
+  .see-all { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; }
+  .categories { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+  .cat-chip { background: var(--white); border: 1.5px solid var(--border); padding: 0.6rem 1.3rem; border-radius: 30px; font-size: 0.88rem; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .cat-chip:hover, .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* PRODUCTS */
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+  .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.25s; cursor: pointer; }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+  .product-img { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+  .product-img.bg1 { background: linear-gradient(135deg, #fef3e2, #fde8c8); }
+  .product-img.bg2 { background: linear-gradient(135deg, #e8f4fd, #cce8fb); }
+  .product-img.bg3 { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+  .product-img.bg4 { background: linear-gradient(135deg, #fdf2f8, #fce7f3); }
+  .product-img.bg5 { background: linear-gradient(135deg, #fefce8, #fef08a); }
+  .product-img.bg6 { background: linear-gradient(135deg, #f0f9ff, #bae6fd); }
+  .product-info { padding: 1rem 1.2rem 1.3rem; }
+  .product-tag { display: inline-block; background: var(--tag-bg); color: var(--primary); font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 4px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .product-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .product-msme { color: var(--gray); font-size: 0.82rem; margin-bottom: 0.7rem; }
+  .product-footer { display: flex; justify-content: space-between; align-items: center; }
+  .product-price { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+  .add-btn { background: var(--accent); color: white; border: none; padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .add-btn:hover { background: #d05a20; transform: scale(1.05); }
+  .add-btn.added { background: var(--green); }
+  .stock-badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 4px; margin-top: 0.5rem; }
+  .stock-badge.ok { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .stock-badge.low { background: #fff7ed; color: #92400e; border: 1px solid #fed7aa; }
+  .stock-badge.out { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .product-card.oos { opacity: 0.72; }
+
+  /* STATS */
+  .stats-bar { background: var(--primary); padding: 2.5rem 5%; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1.5rem; }
+  .stat { text-align: center; }
+  .stat .num { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--accent); display: block; }
+  .stat .label { color: rgba(255,255,255,0.7); font-size: 0.88rem; }
+
+  footer { background: #0d1f35; color: rgba(255,255,255,0.6); text-align: center; padding: 2rem; font-size: 0.85rem; }
+  footer span { color: var(--accent); }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--white); border-radius: 18px; padding: 2.5rem; width: 100%; max-width: 460px; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.18); animation: slideUp 0.25s ease; max-height: 90vh; overflow-y: auto; }
+  .modal.wide { max-width: 540px; }
+  .modal.xlwide { max-width: 700px; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+  .modal-close { position: absolute; top: 1.2rem; right: 1.4rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); }
+  .modal-close:hover { color: #c0392b; }
+  .modal-logo { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.3rem; margin-bottom: 0.3rem; }
+  .modal-logo span { color: var(--accent); }
+  .modal h2 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .modal-sub { color: var(--gray); font-size: 0.88rem; margin-bottom: 1.6rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-bottom: 0.35rem; }
+  .form-group input, .form-group select { width: 100%; padding: 0.7rem 0.95rem; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; background: #fafbfc; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: white; }
+  .form-group input.error { border-color: #e74c3c; }
+  .field-error { color: #e74c3c; font-size: 0.75rem; margin-top: 0.2rem; display: none; }
+  .field-error.show { display: block; }
+  .btn-submit { width: 100%; padding: 0.85rem; background: var(--accent); color: white; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+  .btn-submit:hover { background: #d05a20; }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  .alert.show { display: block; }
+  .alert-error { background: #fef2f2; color: #c0392b; border: 1px solid #fca5a5; }
+  .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+  .modal-switch { text-align: center; font-size: 0.85rem; color: var(--gray); margin-top: 1rem; }
+  .modal-switch a { color: var(--accent); font-weight: 600; cursor: pointer; }
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 2.8rem; }
+  .toggle-pw { position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray); }
+
+  /* CART */
+  .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+  .cart-item:last-of-type { border: none; }
+  .ci-left { display: flex; align-items: center; gap: 0.8rem; }
+  .ci-icon { font-size: 1.8rem; }
+  .ci-name { font-weight: 600; font-size: 0.92rem; }
+  .ci-msme { color: var(--gray); font-size: 0.78rem; }
+  .ci-right { display: flex; align-items: center; gap: 0.8rem; }
+  .qty-ctrl { display: flex; align-items: center; gap: 0.4rem; }
+  .qty-btn { background: var(--light); border: 1px solid var(--border); width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+  .qty-num { font-weight: 700; min-width: 20px; text-align: center; font-size: 0.9rem; }
+  .ci-price { font-weight: 700; color: var(--primary); min-width: 60px; text-align: right; }
+  .ci-remove { background: none; border: none; cursor: pointer; color: #aaa; font-size: 1rem; }
+  .ci-remove:hover { color: #c0392b; }
+  .cart-total { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-top: 2px solid var(--border); font-size: 1.1rem; font-weight: 700; margin-top: 0.5rem; }
+  .cart-empty { text-align: center; padding: 2rem; color: var(--gray); }
+
+  /* ORDER TRACKING */
+  .order-track-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+  .order-track-header { display: flex; justify-content: space-between; margin-bottom: 0.8rem; }
+  .order-id { font-weight: 700; color: var(--primary); }
+  .order-status { padding: 0.2rem 0.7rem; border-radius: 5px; font-size: 0.78rem; font-weight: 700; }
+  .status-processing { background: #fff7ed; color: #c2410c; }
+  .status-shipped { background: #eff6ff; color: #1d4ed8; }
+  .status-delivered { background: #f0fdf4; color: #16a34a; }
+  .track-steps { display: flex; justify-content: space-between; margin-top: 0.8rem; }
+  .track-step { text-align: center; flex: 1; }
+  .track-dot { width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 0.3rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+  .track-dot.done { background: var(--green); color: white; }
+  .track-dot.active { background: var(--accent); color: white; }
+  .track-dot.waiting { background: #e5e7eb; color: #aaa; }
+  .track-label { font-size: 0.72rem; color: var(--gray); }
+  .track-line { flex: 1; height: 2px; margin-top: 13px; }
+  .track-line.done { background: var(--green); }
+  .track-line.waiting { background: #e5e7eb; }
+
+  /* CHECKOUT STEPS */
+  .checkout-steps { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .ck-step { flex: 1; text-align: center; padding: 0.5rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; background: var(--light); color: var(--gray); }
+  .ck-step.active { background: var(--accent); color: white; }
+  .ck-step.done { background: var(--green); color: white; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--primary); color: white; padding: 0.9rem 1.5rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #16a34a; }
+  .toast.error { background: #c0392b; }
+
+  @media(max-width:768px) {
+    .hero { flex-direction: column; padding: 60px 5%; }
+    .hero-visual { display: none; }
+    .search-wrap { flex-wrap: wrap; }
+    .form-row { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="window.scrollTo(0,0)">Biz<span>Bridge</span> <small style="font-family:'DM Sans';font-size:0.62rem;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-left:4px;">Marketplace</small></div>
+  <ul class="nav-links">
+    <li><a onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Browse</a></li>
+    <li><a onclick="filterCategory('Food & Agriculture')">Categories</a></li>
+    <li><a href="msme-portal.html">MSMEs</a></li>
+    <li><a onclick="requireAuth('orders')">My Orders</a></li>
+    <li><a onclick="openTrackOrder()" style="color:#e86c2f;font-weight:600;">🚚 Track Order</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openModal('cartModal')">🛒 Cart <span class="cart-badge" id="cartBadge">0</span></button>
+    <div id="navAuthArea">
+      <button class="btn-login-nav" onclick="openAuth()">Log In</button>
+      <button class="nav-cta" onclick="openAuth('register')">Sign Up Free</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-badge">🛍️ India's MSME Marketplace</div>
+    <h1>Shop Direct from <span>Local Makers</span> & Small Businesses</h1>
+    <p>Discover thousands of authentic products crafted by India's MSME entrepreneurs. From textiles to food, hardware to handicrafts — all in one place.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Explore Products →</button>
+      <button class="btn-outline" onclick="openModal('howItWorksModal')">How It Works</button>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-cards">
+      <div class="mini-card"><div class="icon">🏭</div><span class="num">12K+</span><p>MSME Sellers</p></div>
+      <div class="mini-card"><div class="icon">📦</div><span class="num">85K+</span><p>Products Listed</p></div>
+      <div class="mini-card"><div class="icon">⭐</div><span class="num">4.8</span><p>Avg. Rating</p></div>
+      <div class="mini-card"><div class="icon">🚚</div><span class="num">48hr</span><p>Fast Delivery</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="search-section">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search products, brands, categories..." oninput="filterSearch()">
+    <select id="categoryFilter" onchange="filterSearch()">
+      <option value="">All Categories</option>
+      <option>Food & Agriculture</option>
+      <option>Textiles</option>
+      <option>Hardware</option>
+      <option>Handicrafts</option>
+      <option>Health</option>
+    </select>
+    <button onclick="filterSearch()">Search</button>
+  </div>
+</div>
+
+<section class="section">
+  <div class="section-header"><h2 class="section-title">Browse by Category</h2></div>
+  <div class="categories">
+    <div class="cat-chip active" onclick="filterCategory('')">🛒 All Products</div>
+    <div class="cat-chip" onclick="filterCategory('Food & Agriculture')">🌾 Food & Agriculture</div>
+    <div class="cat-chip" onclick="filterCategory('Textiles')">👗 Textiles & Apparel</div>
+    <div class="cat-chip" onclick="filterCategory('Hardware')">🔧 Manufacturing</div>
+    <div class="cat-chip" onclick="filterCategory('Handicrafts')">🏺 Handicrafts</div>
+    <div class="cat-chip" onclick="filterCategory('Health')">💊 Health & Wellness</div>
+  </div>
+</section>
+
+<section class="section" id="products" style="padding-top:0">
+  <div class="section-header">
+    <h2 class="section-title">Featured Products</h2>
+    <span class="see-all" onclick="filterCategory('')">See All →</span>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat"><span class="num">12,400+</span><span class="label">Verified MSME Sellers</span></div>
+  <div class="stat"><span class="num">85,000+</span><span class="label">Products Available</span></div>
+  <div class="stat"><span class="num">2.1M+</span><span class="label">Happy Customers</span></div>
+  <div class="stat"><span class="num">28 States</span><span class="label">Pan-India Reach</span></div>
+</div>
+
+<footer><p>© 2025 <span>BizBridge</span> — Empowering India's MSMEs. All rights reserved.</p></footer>
+
+
+<!-- ══════════════════════════════
+     LOGIN MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-logo">Biz<span>Bridge</span></div>
+    <h2>Welcome Back</h2>
+    <p class="modal-sub">Log in to your account to shop and track orders</p>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.55rem 0.85rem;font-size:0.79rem;color:#0369a1;margin-bottom:0.8rem;">🔗 <strong>Universal Login</strong> — Your account works across all BizBridge portals</div>
+    <div class="alert alert-error" id="loginError"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@email.com"><div class="field-error" id="loginEmailErr">Valid email required.</div></div>
+    <div class="form-group"><label>Password</label><div class="password-wrap"><input type="password" id="loginPassword" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"><button class="toggle-pw" onclick="togglePw('loginPassword',this)">👁️</button></div><div class="field-error" id="loginPasswordErr">Password required.</div></div>
+    <button class="btn-submit" id="loginBtn" onclick="doLogin()">🔐 Log In</button>
+    <div class="modal-switch">New here? <a onclick="switchModal('loginModal','registerModal')">Create an account →</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     REGISTER MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+    <div class="modal-logo">Biz<span>Bridge</span></div>
+    <h2>Create Your Account</h2>
+    <p class="modal-sub">Shop from thousands of Indian MSMEs</p>
+    <div class="alert alert-error" id="registerError"></div>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input id="regFirst" placeholder="Priya"><div class="field-error" id="regFirstErr">Required.</div></div>
+      <div class="form-group"><label>Last Name</label><input id="regLast" placeholder="Sharma"><div class="field-error" id="regLastErr">Required.</div></div>
+    </div>
+    <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="you@email.com"><div class="field-error" id="regEmailErr">Valid email required.</div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input id="regPhone" placeholder="+91 98765 43210"><div class="field-error" id="regPhoneErr">10-digit number required.</div></div>
+      <div class="form-group"><label>City</label><input id="regCity" placeholder="e.g. Hyderabad"><div class="field-error" id="regCityErr">Required.</div></div>
+    </div>
+    <div class="form-group"><label>Password</label><div class="password-wrap"><input type="password" id="regPassword" placeholder="Minimum 8 characters"><button class="toggle-pw" onclick="togglePw('regPassword',this)">👁️</button></div><div class="field-error" id="regPasswordErr">Min 8 characters.</div></div>
+    <button class="btn-submit" id="registerBtn" onclick="doRegister()">🛍️ Create Account & Start Shopping</button>
+    <div class="modal-switch">Already have an account? <a onclick="switchModal('registerModal','loginModal')">Log in →</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CART MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="cartModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('cartModal')">✕</button>
+    <h2>🛒 Your Cart</h2>
+    <p class="modal-sub" id="cartSubtitle">Review your items before checkout</p>
+    <div id="cartItems"></div>
+    <div id="cartFooter"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CHECKOUT MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('checkoutModal')">✕</button>
+    <h2>Checkout</h2>
+    <div class="checkout-steps" id="ckSteps">
+      <div class="ck-step active" id="ck1">1. Delivery</div>
+      <div class="ck-step" id="ck2">2. Payment</div>
+      <div class="ck-step" id="ck3">3. Confirm</div>
+    </div>
+    <div id="ckContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     ORDERS MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="ordersModal">
+  <div class="modal xlwide">
+    <button class="modal-close" onclick="closeModal('ordersModal')">✕</button>
+    <h2>📦 My Orders</h2>
+    <p class="modal-sub">Track your purchases from BizBridge MSMEs</p>
+    <div id="ordersList"></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS MODAL -->
+<div class="modal-overlay" id="howItWorksModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('howItWorksModal')">✕</button>
+    <div class="modal-logo">Biz<span>Bridge</span></div>
+    <h2>How BizBridge Works</h2>
+    <p class="modal-sub">Shop directly from Indian MSME manufacturers — fast, verified, and reliable.</p>
+    <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:flex-start;gap:1rem;background:#f8fafc;border-radius:10px;padding:1rem;">
+        <div style="background:var(--accent);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+        <div><div style="font-weight:700;color:var(--primary);margin-bottom:0.2rem;">Browse & Add to Cart</div><div style="color:var(--gray);font-size:0.88rem;">Explore thousands of products from verified MSME sellers across India. Filter by category, price, or location.</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:1rem;background:#f8fafc;border-radius:10px;padding:1rem;">
+        <div style="background:var(--accent);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+        <div><div style="font-weight:700;color:var(--primary);margin-bottom:0.2rem;">Checkout Securely</div><div style="color:var(--gray);font-size:0.88rem;">Pay via UPI, card, net banking, or Cash on Delivery. All transactions are encrypted and secure.</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:1rem;background:#f8fafc;border-radius:10px;padding:1rem;">
+        <div style="background:var(--accent);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+        <div><div style="font-weight:700;color:var(--primary);margin-bottom:0.2rem;">Auto-Connected to Logistics</div><div style="color:var(--gray);font-size:0.88rem;">Your order is automatically routed to our logistics partners (Delhivery, Shiprocket, DTDC). Real-time tracking included.</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:1rem;background:#f8fafc;border-radius:10px;padding:1rem;">
+        <div style="background:var(--green);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">4</div>
+        <div><div style="font-weight:700;color:var(--primary);margin-bottom:0.2rem;">Delivered in 48–72 Hours</div><div style="color:var(--gray);font-size:0.88rem;">Fast delivery across 28 states. Every purchase directly supports an Indian small business owner.</div></div>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="closeModal('howItWorksModal');document.getElementById('products').scrollIntoView({behavior:'smooth'})">🛍️ Start Shopping Now</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// DATABASE
+// ══════════════════════════════
+// ═══════════════════════════════════════════════
+// BIZBRIDGE UNIFIED DATABASE
+// All three portals share this single storage key: bb_bizbridge_db
+// ═══════════════════════════════════════════════
+const UDB = {
+  _key: 'bb_bizbridge_db',
+  _get: function() {
+    try { return JSON.parse(localStorage.getItem(this._key) || 'null') || { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] }; } catch(e) { return { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] }; }
+  },
+  _save: function(data) { localStorage.setItem(this._key, JSON.stringify(data)); },
+
+  // MSME Users
+  getMsmeUsers: function() { return this._get().msmeUsers; },
+  saveMsmeUser: function(user) { const d=this._get(); const i=d.msmeUsers.findIndex(u=>u.email===user.email); if(i>=0) d.msmeUsers[i]=user; else d.msmeUsers.push(user); this._save(d); },
+
+  // Supplier Users
+  getSupplierUsers: function() { return this._get().supplierUsers; },
+  saveSupplierUser: function(user) { const d=this._get(); const i=d.supplierUsers.findIndex(u=>u.email===user.email); if(i>=0) d.supplierUsers[i]=user; else d.supplierUsers.push(user); this._save(d); },
+
+  // Customer Users
+  getCustomerUsers: function() { return this._get().customerUsers; },
+  saveCustomerUser: function(user) { const d=this._get(); const i=d.customerUsers.findIndex(u=>u.email===user.email); if(i>=0) d.customerUsers[i]=user; else d.customerUsers.push(user); this._save(d); },
+
+  getAllUsers: function() {
+    return [
+      ...this.getMsmeUsers().map(u => ({...u, _type:'msme'})),
+      ...this.getSupplierUsers().map(u => ({...u, _type:'supplier'})),
+      ...this.getCustomerUsers().map(u => ({...u, _type:'customer'})),
+    ];
+  },
+
+  // MSME Products (keyed by email)
+  getProducts: function(email) { return this._get().products[email] || []; },
+  saveProducts: function(email, prods) { const d=this._get(); d.products[email]=prods; this._save(d); },
+  getAllProducts: function() { const d=this._get(); return Object.values(d.products).flat(); },
+
+  // Supplier Listings (keyed by email)
+  getListings: function(email) { return this._get().listings[email] || []; },
+  saveListings: function(email, items) { const d=this._get(); d.listings[email]=items; this._save(d); },
+  getAllListings: function() { const d=this._get(); return Object.values(d.listings).flat(); },
+
+  // Customer Orders (keyed by email)
+  getCustomerOrders: function(email) { return this._get().customerOrders[email] || []; },
+  saveCustomerOrders: function(email, orders) { const d=this._get(); d.customerOrders[email]=orders; this._save(d); },
+
+  // Cart (global)
+  getCart: function() { return this._get().cart; },
+  saveCart: function(cart) { const d=this._get(); d.cart=cart; this._save(d); },
+
+  // RFQs
+  getRFQs: function() { return this._get().rfqs; },
+  saveRFQ: function(rfq) { const d=this._get(); d.rfqs.push(rfq); this._save(d); },
+
+  // Supply Orders
+  getSupplyOrders: function() { return this._get().supplyOrders; },
+  saveSupplyOrder: function(order) { const d=this._get(); d.supplyOrders.push(order); this._save(d); },
+
+  // Catalog Stock — shared across all portals, keyed by product id
+  getCatalogStock: function() { const d=this._get(); return d.catalogStock || {}; },
+  getCatalogStockById: function(id) { const s=this.getCatalogStock(); return (s[id] !== undefined) ? s[id] : null; },
+  setCatalogStock: function(id, qty) { const d=this._get(); if(!d.catalogStock) d.catalogStock={}; d.catalogStock[id]=qty; this._save(d); },
+  deductCatalogStock: function(id, qty) { const d=this._get(); if(!d.catalogStock) d.catalogStock={}; if(d.catalogStock[id]===undefined) return; d.catalogStock[id]=Math.max(0, d.catalogStock[id]-qty); this._save(d); },
+  initCatalogStock: function(products) { const d=this._get(); if(!d.catalogStock) d.catalogStock={}; let changed=false; products.forEach(p=>{ if(d.catalogStock[p.id]===undefined){ d.catalogStock[p.id]=p.stock; changed=true; } }); if(changed) this._save(d); },
+
+  // Sessions — unified localStorage key, shared across all portals
+  getSession: function() { try { return JSON.parse(localStorage.getItem('bb_session')||'null'); } catch(e) { return null; } },
+  setSession: function(user) { localStorage.setItem('bb_session', JSON.stringify(user)); },
+  clearSession: function() { localStorage.removeItem('bb_session'); },
+};
+
+// Customer Marketplace DB adapter
+const DB = {
+  getUsers: () => UDB.getCustomerUsers(),
+  saveUsers: (users) => { users.forEach(u => UDB.saveCustomerUser(u)); },
+  getSession: () => UDB.getSession(),
+  setSession: u => UDB.setSession(u),
+  clearSession: () => UDB.clearSession(),
+  getCart: () => UDB.getCart(),
+  saveCart: c => UDB.saveCart(c),
+  getOrders: email => UDB.getCustomerOrders(email),
+  saveOrders: (email, o) => UDB.saveCustomerOrders(email, o),
+};
+
+// Seed demo
+(function() {
+  const users = DB.getUsers();
+  if (!users.find(u => u.email === 'demo@customer.in')) {
+    UDB.saveCustomerUser({ first:'Demo', last:'Customer', email:'demo@customer.in', phone:'9876543210', city:'Hyderabad', password:'demo1234' });
+  }
+  // Seed demo orders
+  if (DB.getOrders('demo@customer.in').length === 0) {
+    DB.saveOrders('demo@customer.in', [
+      { id:'#BB9021', items:[{name:'Organic Basmati Rice',qty:1,price:480}], total:480, date:'Mar 10, 2025', status:'delivered', address:'123 MG Road, Hyderabad' },
+      { id:'#BB9020', items:[{name:'Handloom Cotton Saree',qty:1,price:1250},{name:'Ayurvedic Hair Oil',qty:2,price:640}], total:1890, date:'Mar 13, 2025', status:'shipped', address:'123 MG Road, Hyderabad' },
+    ]);
+  }
+})();
+
+// ══════════════════════════════
+// PRODUCTS DATA
+// ══════════════════════════════
+const PRODUCTS = [
+  { id:1, name:'Organic Basmati Rice (5kg)', msme:'GrainCraft Foods, Haryana', price:480, category:'Food & Agriculture', icon:'🌾', bg:'bg1', stock:50 },
+  { id:2, name:'Handloom Cotton Saree', msme:"Weavers' Co-op, Varanasi", price:1250, category:'Textiles', icon:'👘', bg:'bg2', stock:25 },
+  { id:3, name:'Bamboo Folding Chair', msme:'EcoCraft Works, Assam', price:2100, category:'Handicrafts', icon:'🪑', bg:'bg3', stock:15 },
+  { id:4, name:'Ayurvedic Hair Oil (200ml)', msme:'NaturRoots, Kerala', price:320, category:'Health', icon:'🧴', bg:'bg4', stock:80 },
+  { id:5, name:'Stainless Steel Bolt Set', msme:'MetalPro Industries, Ludhiana', price:650, category:'Hardware', icon:'🔧', bg:'bg5', stock:40 },
+  { id:6, name:'Blue Pottery Vase Set', msme:'Jaipur Artisans, Rajasthan', price:890, category:'Handicrafts', icon:'🏺', bg:'bg6', stock:12 },
+  { id:7, name:'Cold Pressed Groundnut Oil', msme:'AgroNatural, Gujarat', price:280, category:'Food & Agriculture', icon:'🫙', bg:'bg1', stock:60 },
+  { id:8, name:'Silk Dupatta (Premium)', msme:'South Silk House, Kanchipuram', price:1800, category:'Textiles', icon:'🎀', bg:'bg4', stock:8 },
+];
+
+// Initialise catalog stock in shared DB (only sets values that don't exist yet)
+UDB.initCatalogStock(PRODUCTS);
+
+// Helper — get live stock for a product id
+function getLiveStock(id) {
+  const s = UDB.getCatalogStockById(id);
+  return (s !== null) ? s : (PRODUCTS.find(p=>p.id===id)||{stock:0}).stock;
+}
+
+let filteredProducts = [...PRODUCTS];
+let cart = DB.getCart();
+let checkoutStep = 1;
+
+// ══════════════════════════════
+// RENDER PRODUCTS
+// ══════════════════════════════
+function renderProducts(products) {
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = products.map(p => {
+    const inCart = cart.find(c => c.id === p.id);
+    const stock = getLiveStock(p.id);
+    const outOfStock = stock === 0;
+    const lowStock = stock > 0 && stock <= 5;
+    const stockLabel = outOfStock
+      ? `<span class="stock-badge out">Out of Stock</span>`
+      : lowStock
+        ? `<span class="stock-badge low">Only ${stock} left!</span>`
+        : `<span class="stock-badge ok">${stock} in stock</span>`;
+    return `
+    <div class="product-card${outOfStock?' oos':''}">
+      <div class="product-img ${p.bg}">${p.icon}</div>
+      <div class="product-info">
+        <span class="product-tag">${p.category}</span>
+        <div class="product-name">${p.name}</div>
+        <div class="product-msme">by ${p.msme}</div>
+        <div class="product-footer">
+          <span class="product-price">₹${p.price.toLocaleString('en-IN')}</span>
+          ${outOfStock
+            ? `<button class="add-btn" disabled style="background:#d1d5db;cursor:not-allowed;">Out of Stock</button>`
+            : `<button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart ? '✅ Added' : '+ Add to Cart'}</button>`
+          }
+        </div>
+        ${stockLabel}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCategory(cat) {
+  document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
+  // Activate the matching chip by onclick attribute (reliable)
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    const oc = chip.getAttribute('onclick') || '';
+    if (!cat && oc.includes("('')")) chip.classList.add('active');
+    else if (cat && oc.includes("'" + cat + "'")) chip.classList.add('active');
+  });
+  // Sync the category dropdown
+  const sel = document.getElementById('categoryFilter');
+  if (sel) sel.value = cat;
+  filteredProducts = cat ? PRODUCTS.filter(p => p.category === cat) : [...PRODUCTS];
+  renderProducts(filteredProducts);
+  document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+}
+
+function filterSearch() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  // Sync chips with dropdown
+  document.querySelectorAll('.cat-chip').forEach(c => {
+    c.classList.remove('active');
+    if (!cat && c.textContent.includes('All')) c.classList.add('active');
+    else if (cat && c.textContent.toLowerCase().includes(cat.toLowerCase().split(' ')[0])) c.classList.add('active');
+  });
+  filteredProducts = PRODUCTS.filter(p =>
+    (!cat || p.category === cat) &&
+    (!q || p.name.toLowerCase().includes(q) || p.msme.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+  );
+  renderProducts(filteredProducts);
+  if (q || cat) document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ══════════════════════════════
+// CART
+// ══════════════════════════════
+function addToCart(id, btn) {
+  const product = PRODUCTS.find(p => p.id === id);
+  const stock = getLiveStock(id);
+  const inCartQty = (cart.find(c => c.id === id)||{qty:0}).qty;
+  if (stock === 0) { showToast('❌ This product is out of stock.', 'error'); return; }
+  if (inCartQty >= stock) { showToast(`⚠️ Only ${stock} unit(s) available.`, 'error'); return; }
+  const existing = cart.find(c => c.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({ ...product, qty: 1 }); }
+  DB.saveCart(cart);
+  updateCartBadge();
+  btn.textContent = '✅ Added';
+  btn.classList.add('added');
+  showToast(`🛒 ${product.name} added to cart!`, 'success');
+}
+
+function updateCartBadge() {
+  const total = cart.reduce((s, c) => s + c.qty, 0);
+  document.getElementById('cartBadge').textContent = total;
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooter');
+  const sub = document.getElementById('cartSubtitle');
+  if (cart.length === 0) {
+    container.innerHTML = '<div class="cart-empty"><div style="font-size:3rem">🛒</div><p style="margin-top:0.8rem">Your cart is empty.<br>Start adding products!</p></div>';
+    footer.innerHTML = '';
+    sub.textContent = 'Your cart is empty';
+    return;
+  }
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  sub.textContent = `${cart.reduce((s,c)=>s+c.qty,0)} item(s) — ₹${total.toLocaleString('en-IN')}`;
+  container.innerHTML = cart.map((item, i) => `
+    <div class="cart-item">
+      <div class="ci-left">
+        <span class="ci-icon">${item.icon}</span>
+        <div>
+          <div class="ci-name">${item.name}</div>
+          <div class="ci-msme">by ${item.msme}</div>
+        </div>
+      </div>
+      <div class="ci-right">
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <span class="ci-price">₹${(item.price*item.qty).toLocaleString('en-IN')}</span>
+        <button class="ci-remove" onclick="removeFromCart(${i})">✕</button>
+      </div>
+    </div>`).join('');
+  footer.innerHTML = `
+    <div class="cart-total"><span>Total</span><span>₹${total.toLocaleString('en-IN')}</span></div>
+    <button class="btn-submit" onclick="startCheckout()" style="margin-top:0.8rem">🚀 Proceed to Checkout</button>`;
+}
+
+function changeQty(i, delta) {
+  cart[i].qty = Math.max(1, cart[i].qty + delta);
+  DB.saveCart(cart);
+  updateCartBadge();
+  renderCart();
+}
+
+function removeFromCart(i) {
+  cart.splice(i, 1);
+  DB.saveCart(cart);
+  updateCartBadge();
+  renderCart();
+  renderProducts(filteredProducts);
+}
+
+// ══════════════════════════════
+// CHECKOUT
+// ══════════════════════════════
+function startCheckout() {
+  const s = DB.getSession();
+  if (!s) { closeModal('cartModal'); openAuth(); return; }
+  closeModal('cartModal');
+  checkoutStep = 1;
+  renderCheckout();
+  openModal('checkoutModal');
+}
+
+function renderCheckout() {
+  ['ck1','ck2','ck3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'ck-step' + (i+1 === checkoutStep ? ' active' : i+1 < checkoutStep ? ' done' : '');
+  });
+  const s = DB.getSession();
+  const total = cart.reduce((sum,c) => sum + c.price*c.qty, 0);
+  const content = document.getElementById('ckContent');
+
+  if (checkoutStep === 1) {
+    content.innerHTML = `
+      <h3 style="color:var(--primary);margin-bottom:1rem;font-size:1rem;">Delivery Address</h3>
+      <div class="form-group"><label>Full Name</label><input id="ckName" value="${s.first||s.firstName||''} ${s.last||s.lastName||''}"></div>
+      <div class="form-group"><label>Phone</label><input id="ckPhone" value="${s.phone||''}"></div>
+      <div class="form-group"><label>Address Line 1</label><input id="ckAddr1" placeholder="House/Flat No., Street"></div>
+      <div class="form-group"><label>Address Line 2</label><input id="ckAddr2" placeholder="Area, Landmark"></div>
+      <div class="form-row">
+        <div class="form-group"><label>City</label><input id="ckCity" value="${s.city||''}"></div>
+        <div class="form-group"><label>PIN Code</label><input id="ckPin" placeholder="500001"></div>
+      </div>
+      <button class="btn-submit" onclick="nextCheckout()">Continue to Payment →</button>`;
+  } else if (checkoutStep === 2) {
+    content.innerHTML = `
+      <h3 style="color:var(--primary);margin-bottom:1rem;font-size:1rem;">Payment Method</h3>
+      <div style="display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.2rem;">
+        ${['💳 Credit / Debit Card','📱 UPI (GPay, PhonePe, Paytm)','🏦 Net Banking','💵 Cash on Delivery'].map((m,i) => `
+          <label style="display:flex;align-items:center;gap:0.8rem;background:#f8fafc;border:1.5px solid var(--border);border-radius:8px;padding:0.8rem 1rem;cursor:pointer;">
+            <input type="radio" name="payment" value="${i}" ${i===1?'checked':''} style="width:16px;height:16px;"> ${m}
+          </label>`).join('')}
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:0.8rem 1rem;margin-bottom:1rem;font-size:0.88rem;">
+        <strong>Order Total: ₹${total.toLocaleString('en-IN')}</strong> + ₹49 delivery = <strong>₹${(total+49).toLocaleString('en-IN')}</strong>
+      </div>
+      <button class="btn-submit" onclick="nextCheckout()">Place Order →</button>`;
+  } else if (checkoutStep === 3) {
+    const orderId = '#BB' + Math.floor(Math.random()*9000+1000);
+    const s2 = DB.getSession();
+    const newOrder = { id:orderId, items:cart.map(c=>({name:c.name,qty:c.qty,price:c.price*c.qty})), total:total+49, date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}), status:'processing', address:document.getElementById('ckAddr1')?.value||s.city };
+    const orders = DB.getOrders(s2.email); orders.unshift(newOrder); DB.saveOrders(s2.email, orders);
+    // Deduct stock for each item in the order
+    cart.forEach(item => { UDB.deductCatalogStock(item.id, item.qty); });
+    cart = []; DB.saveCart(cart); updateCartBadge(); renderProducts(filteredProducts);
+    content.innerHTML = `
+      <div style="text-align:center;padding:1.5rem 0;">
+        <div style="font-size:4rem;margin-bottom:0.8rem;">🎉</div>
+        <h3 style="color:var(--green);font-size:1.3rem;margin-bottom:0.5rem;">Order Placed Successfully!</h3>
+        <p style="color:var(--gray);margin-bottom:1rem;">Your order <strong>${orderId}</strong> has been confirmed.</p>
+        <p style="color:var(--gray);font-size:0.88rem;">Estimated delivery: <strong>2–3 business days</strong></p>
+        <div style="display:flex;gap:0.8rem;justify-content:center;margin-top:1.5rem;">
+          <button class="btn-submit" style="width:auto;padding:0.7rem 1.5rem;" onclick="closeModal('checkoutModal');openOrders()">Track Order 📦</button>
+          <button onclick="closeModal('checkoutModal')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:0.7rem 1.5rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">Continue Shopping</button>
+        </div>
+      </div>`;
+  }
+}
+
+function nextCheckout() {
+  if (checkoutStep === 1) {
+    if (!document.getElementById('ckAddr1').value.trim()) { showToast('Please enter your delivery address.','error'); return; }
+  }
+  checkoutStep++;
+  renderCheckout();
+}
+
+// ══════════════════════════════
+// ORDERS
+// ══════════════════════════════
+function requireAuth(action) {
+  const s = DB.getSession();
+  if (!s) { openAuth(); return; }
+  if (action === 'orders') openOrders();
+}
+
+function openOrders() {
+  const s = DB.getSession();
+  if (!s) { openAuth(); return; }
+  const orders = DB.getOrders(s.email);
+  const container = document.getElementById('ordersList');
+  if (orders.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray)"><div style="font-size:3rem">📦</div><p style="margin-top:0.8rem">No orders yet. Start shopping!</p></div>';
+  } else {
+    container.innerHTML = orders.map(o => {
+      const steps = ['Confirmed','Processing','Shipped','Delivered'];
+      const stepIdx = o.status==='delivered'?3:o.status==='shipped'?2:o.status==='processing'?1:0;
+      return `
+      <div class="order-track-card">
+        <div class="order-track-header">
+          <div>
+            <span class="order-id">${o.id}</span>
+            <span style="color:var(--gray);font-size:0.82rem;margin-left:0.8rem;">${o.date}</span>
+          </div>
+          <span class="order-status status-${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span>
+        </div>
+        <div style="font-size:0.85rem;color:var(--gray);margin-bottom:0.6rem;">
+          ${o.items.map(i=>`${i.name} × ${i.qty}`).join(' · ')} &nbsp;|&nbsp; <strong>₹${o.total.toLocaleString('en-IN')}</strong>
+        </div>
+        <div class="track-steps">
+          ${steps.map((step,i) => `
+            <div class="track-step">
+              <div class="track-dot ${i<=stepIdx?i<stepIdx?'done':'active':'waiting'}">${i<=stepIdx&&i<stepIdx?'✓':i+1}</div>
+              <div class="track-label">${step}</div>
+            </div>
+            ${i<steps.length-1?`<div class="track-line ${i<stepIdx?'done':'waiting'}"></div>`:''}
+          `).join('')}
+        </div>
+        <div style="margin-top:0.8rem;">
+          <button onclick="window.open('logistics-tracker.html','_blank')" style="background:#1a3c5e;color:white;border:none;padding:0.45rem 1.1rem;border-radius:7px;font-size:0.82rem;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">🗺️ Track on Map</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  openModal('ordersModal');
+}
+
+// ══════════════════════════════
+// AUTH
+// ══════════════════════════════
+
+// ── AUTH PAGE REDIRECT ─────────────────────────────────────────────────────
+function openAuth(tab) {
+  const returnFile = location.pathname.split('/').pop() || location.href;
+  window.location.href = 'auth.html?return=' + encodeURIComponent(returnFile) + (tab ? '&tab=' + tab : '');
+}
+
+function doLogin() {
+  clearErrors();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  let ok = true;
+  if (!email.includes('@')) { showFE('loginEmailErr','loginEmail'); ok=false; }
+  if (!pw) { showFE('loginPasswordErr','loginPassword'); ok=false; }
+  if (!ok) return;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Logging in...';
+  setTimeout(() => {
+    // Search ALL portal users for universal login
+    const _all = UDB.getAllUsers();
+    let user = _all.find(u => u.email===email && u.password===pw);
+    if (user) user = {...user, first: user.first||user.firstName||'', last: user.last||user.lastName||''};
+    btn.disabled=false; btn.textContent='🔐 Log In';
+    if (!user) { showAlert('loginError','❌ Invalid credentials. Try demo@bizbridge.in / demo1234'); return; }
+    DB.setSession(user);
+    closeModal('loginModal');
+    updateNavForUser(user);
+    showToast('Welcome back, '+user.first+'! 👋','success');
+  }, 800);
+}
+
+function doRegister() {
+  clearErrors();
+  const f = {
+    regFirst: v => v.length >= 1,
+    regLast: v => v.length >= 1,
+    regEmail: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    regPhone: v => { const n = v.replace(/\s/g,'').replace(/^\+?91/,''); return /^[6-9]\d{9}$/.test(n); },
+    regCity: v => v.length >= 1,
+    regPassword: v => v.length >= 8,
+  };
+  let ok = true;
+  for (const k in f) {
+    const el = document.getElementById(k);
+    if (!f[k](el.value.trim())) { showFE(k+'Err',k); ok=false; }
+  }
+  if (!ok) return;
+  const email = document.getElementById('regEmail').value.trim();
+  const allExist = [...UDB.getCustomerUsers(),...UDB.getMsmeUsers(),...UDB.getSupplierUsers()]; if (allExist.find(u => u.email===email)) { showAlert('registerError','❌ Email already registered across BizBridge. Please log in.'); return; }
+  const btn = document.getElementById('registerBtn');
+  btn.disabled=true; btn.textContent='Creating account...';
+  setTimeout(() => {
+    const user = { first:document.getElementById('regFirst').value.trim(), last:document.getElementById('regLast').value.trim(), email, phone:document.getElementById('regPhone').value.trim(), city:document.getElementById('regCity').value.trim(), password:document.getElementById('regPassword').value };
+    UDB.saveCustomerUser(user);
+    DB.setSession(user);
+    btn.disabled=false; btn.textContent='🛍️ Create Account & Start Shopping';
+    closeModal('registerModal');
+    updateNavForUser(user);
+    showToast('🎉 Welcome to BizBridge, '+user.first+'! Start exploring products below 🛍️','success');
+    setTimeout(() => document.getElementById('products').scrollIntoView({behavior:'smooth'}), 500);
+  }, 1000);
+}
+
+function logout() {
+  DB.clearSession();
+  updateNavForUser(null);
+  showToast('Logged out successfully.');
+}
+
+function updateNavForUser(user) {
+  const area = document.getElementById('navAuthArea');
+  if (user) {
+    area.innerHTML = `<span style="color:rgba(255,255,255,0.85);font-size:0.88rem;font-weight:500;">Hi, ${user.first||user.firstName}</span> <button onclick="openOrders()" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.4rem 0.8rem;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;margin-left:0.4rem;">My Orders</button> <button class="btn-logout-nav" onclick="logout()">Log Out</button>`;
+  } else {
+    area.innerHTML = `<button class="btn-login-nav" onclick="openAuth()">Log In</button> <button class="nav-cta" onclick="openAuth('register')">Sign Up Free</button>`;
+  }
+}
+
+// ══════════════════════════════
+// UI HELPERS
+// ══════════════════════════════
+function openModal(id) {
+  clearErrors();
+  if (id==='cartModal') renderCart();
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function switchModal(a,b) { closeModal(a); openModal(b); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('active'); }));
+let toastT;
+function showToast(msg,type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
+function showFE(errId,inputId) { const e=document.getElementById(errId); if(e) e.classList.add('show'); const i=document.getElementById(inputId); if(i) i.classList.add('error'); }
+function showAlert(id,msg) { const el=document.getElementById(id); el.textContent=msg; el.classList.add('show'); }
+function clearErrors() { document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('show')); document.querySelectorAll('.alert').forEach(e=>e.classList.remove('show')); document.querySelectorAll('input.error').forEach(e=>e.classList.remove('error')); }
+function togglePw(id,btn) { const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; btn.textContent=i.type==='password'?'👁️':'🙈'; }
+
+// TRACK ORDER
+function openTrackOrder() {
+  const session = DB.getSession();
+  if (session) {
+    const orders = DB.getOrders(session.email) || [];
+    const lastId = orders.length ? orders[orders.length-1].id : '';
+    const url = lastId ? `logistics-tracker.html?order=${encodeURIComponent(lastId)}` : 'logistics-tracker.html';
+    window.open(url, '_blank');
+  } else {
+    window.open('logistics-tracker.html', '_blank');
+  }
+}
+
+// INIT
+(function() {
+  renderProducts(PRODUCTS);
+  updateCartBadge();
+  const s = DB.getSession();
+  if (s) updateNavForUser(s);
+})();
+</script>
+</body>
+</html>

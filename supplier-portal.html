@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBridge — Raw Material Supplier Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a3c5e;
+    --accent: #e86c2f;
+    --teal: #0d7377;
+    --teal-light: #14a085;
+    --light: #f0f5f4;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --border: #dce8e6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--light); color: #1a1a1a; }
+
+  nav { background: var(--teal); padding: 0 5%; display: flex; align-items: center; justify-content: space-between; height: 70px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,0.15); }
+  .nav-logo { font-family: 'Playfair Display', serif; color: var(--white); font-size: 1.5rem; cursor:pointer; }
+  .nav-logo span { color: #7eecea; }
+  .nav-portal-tag { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase; margin-left: 0.6rem; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+  .nav-links a:hover { color: white; }
+  .nav-right { display: flex; gap: 0.8rem; align-items: center; }
+  .btn-login { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.3); padding: 0.5rem 1.2rem; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem; cursor: pointer; }
+  .btn-register { background: var(--accent); color: white; border: none; padding: 0.55rem 1.3rem; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: background 0.2s; }
+  .btn-register:hover { background: #d05a20; }
+  .btn-logout { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.9rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #0d7377 0%, #084a4d 55%, #0a5e62 100%); padding: 80px 5% 70px; display: flex; gap: 4rem; align-items: center; }
+  .hero-left { flex: 1; }
+  .badge { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(126,236,234,0.15); color: #7eecea; border: 1px solid rgba(126,236,234,0.3); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1.4rem; }
+  .hero h1 { font-family: 'Playfair Display', serif; color: white; font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.2; margin-bottom: 1.2rem; }
+  .hero h1 em { font-style: normal; color: #7eecea; }
+  .hero p { color: rgba(255,255,255,0.75); font-size: 1.02rem; line-height: 1.75; margin-bottom: 2rem; max-width: 500px; }
+  .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-cta { background: var(--accent); color: white; padding: 0.9rem 2rem; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+  .btn-cta:hover { background: #d05a20; transform: translateY(-2px); }
+  .btn-ghost { background: transparent; color: white; padding: 0.9rem 2rem; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+  .hero-right { flex: 1; }
+  .supply-panel { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.13); border-radius: 16px; padding: 1.5rem; }
+  .sp-title { color: white; font-weight: 600; font-size: 0.9rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+  .sp-badge { background: rgba(126,236,234,0.2); color: #7eecea; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 10px; display:flex;align-items:center;gap:0.3rem; }
+  .sp-badge::before { content:''; width:6px;height:6px;background:#7eecea;border-radius:50%;animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+  .supply-list { display: flex; flex-direction: column; gap: 0.8rem; }
+  .supply-item { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+  .si-info { display: flex; align-items: center; gap: 0.8rem; }
+  .si-icon { font-size: 1.5rem; }
+  .si-name { color: white; font-size: 0.88rem; font-weight: 600; }
+  .si-cat { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+  .si-right { text-align: right; }
+  .si-price { color: #7eecea; font-weight: 700; font-size: 0.95rem; }
+  .si-qty { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+  .si-status-active { background: rgba(126,236,234,0.2); color: #7eecea; font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 4px; }
+  .si-status-low { background: rgba(232,108,47,0.25); color: #fba978; font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 4px; }
+
+  /* SECTIONS */
+  .section { padding: 4rem 5%; }
+  .section-label { color: var(--teal); font-size: 0.78rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.6rem; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary); margin-bottom: 0.8rem; }
+  .section-sub { color: var(--gray); font-size: 1rem; line-height: 1.7; max-width: 520px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2.5rem; }
+  .feat-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 1.8rem; transition: all 0.25s; cursor:pointer; }
+  .feat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(13,115,119,0.1); border-color: #a8d5d3; }
+  .feat-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+  .feat-title { font-weight: 700; font-size: 1rem; color: var(--teal); margin-bottom: 0.5rem; }
+  .feat-desc { color: var(--gray); font-size: 0.88rem; line-height: 1.6; }
+
+  .materials-section { background: var(--white); padding: 4rem 5%; }
+  .materials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 2.5rem; }
+  .mat-card { background: var(--light); border: 1.5px solid var(--border); border-radius: 12px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .mat-card:hover { background: var(--teal); border-color: var(--teal); }
+  .mat-card:hover .mat-label, .mat-card:hover .mat-count { color: white; }
+  .mat-icon { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
+  .mat-label { font-weight: 600; font-size: 0.88rem; color: var(--primary); display: block; }
+  .mat-count { color: var(--gray); font-size: 0.78rem; margin-top: 0.2rem; display: block; }
+
+  .connect-section { padding: 4rem 5%; background: #e8f4f4; }
+  .connect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; margin-top: 2.5rem; }
+  .connect-info p { color: var(--gray); font-size: 0.95rem; line-height: 1.75; margin-bottom: 1.5rem; }
+  .connect-perks { display: flex; flex-direction: column; gap: 0.7rem; }
+  .perk { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: var(--primary); font-weight: 500; }
+  .perk::before { content: '✓'; background: var(--teal); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .connect-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .cstat { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; }
+  .cstat .val { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--teal); display: block; }
+  .cstat .lbl { color: var(--gray); font-size: 0.82rem; margin-top: 0.2rem; }
+
+  .redirect-banner { background: linear-gradient(135deg, #e86c2f, #c8501e); padding: 3rem 5%; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .rb-text h3 { font-family: 'Playfair Display', serif; color: white; font-size: 1.7rem; margin-bottom: 0.5rem; }
+  .rb-text p { color: rgba(255,255,255,0.85); font-size: 0.95rem; }
+  .rb-btn { background: white; color: var(--accent); padding: 1rem 2.2rem; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; text-decoration: none; }
+  .rb-btn:hover { background: #fff7f3; transform: translateY(-2px); }
+
+  footer { background: #062929; color: rgba(255,255,255,0.5); text-align: center; padding: 2rem; font-size: 0.85rem; }
+  footer span { color: #7eecea; }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--white); border-radius: 18px; padding: 2.5rem; width: 100%; max-width: 480px; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.18); animation: slideUp 0.25s ease; }
+  .modal.wide { max-width: 560px; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+  .modal-close { position: absolute; top: 1.2rem; right: 1.4rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); }
+  .modal-close:hover { color: #c0392b; }
+  .modal-logo { font-family: 'Playfair Display', serif; color: var(--teal); font-size: 1.3rem; margin-bottom: 0.3rem; }
+  .modal h2 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .modal-sub { color: var(--gray); font-size: 0.88rem; margin-bottom: 1.6rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-bottom: 0.35rem; }
+  .form-group input, .form-group select { width: 100%; padding: 0.7rem 0.95rem; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; background: #fafbfc; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--teal); background: white; }
+  .form-group input.error { border-color: #e74c3c; }
+  .field-error { color: #e74c3c; font-size: 0.75rem; margin-top: 0.2rem; display: none; }
+  .field-error.show { display: block; }
+  .btn-submit { width: 100%; padding: 0.85rem; background: var(--teal); color: white; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+  .btn-submit:hover { background: var(--teal-light); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  .alert.show { display: block; }
+  .alert-error { background: #fef2f2; color: #c0392b; border: 1px solid #fca5a5; }
+  .modal-switch { text-align: center; font-size: 0.85rem; color: var(--gray); margin-top: 1rem; }
+  .modal-switch a { color: var(--teal); font-weight: 600; cursor: pointer; }
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 2.8rem; }
+  .toggle-pw { position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray); }
+
+  /* DASHBOARD */
+  #dashboardPage { display: none; min-height: 100vh; background: var(--light); }
+  .dash-topbar { background: var(--teal); color: white; padding: 0 5%; height: 70px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .dash-topbar .logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; cursor:pointer; }
+  .dash-topbar .logo span { color: #7eecea; }
+  .dash-user { display: flex; align-items: center; gap: 0.7rem; }
+  .dash-avatar { width: 34px; height: 34px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .dash-name { font-size: 0.9rem; font-weight: 600; }
+  .btn-dash-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.82rem; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  .dash-header { background: linear-gradient(135deg, #0d7377, #084a4d); padding: 2rem 5%; color: white; }
+  .dash-header h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+  .dash-header p { color: rgba(255,255,255,0.65); font-size: 0.88rem; margin-top: 0.2rem; }
+  .dash-body { padding: 2rem 5%; }
+  .dash-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .tab-btn { padding: 0.55rem 1.3rem; border-radius: 8px; border: 1.5px solid var(--border); background: white; color: var(--gray); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+  .metric-card { background: white; border-radius: 12px; padding: 1.4rem; border: 1px solid var(--border); }
+  .metric-card .icon { font-size: 1.7rem; margin-bottom: 0.5rem; }
+  .metric-card .val { font-size: 1.5rem; font-weight: 700; color: var(--teal); }
+  .metric-card .lbl { color: var(--gray); font-size: 0.82rem; margin-top: 0.2rem; }
+  .metric-card .chg { color: #16a34a; font-size: 0.79rem; font-weight: 600; margin-top: 0.3rem; }
+  .dash-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; }
+  .dash-card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .dash-card-header h3 { font-size: 1rem; font-weight: 700; color: var(--primary); }
+  .dash-card-body { padding: 1.5rem; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  .data-table th { text-align: left; padding: 0.6rem 1rem; color: var(--gray); font-weight: 600; font-size: 0.79rem; text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; }
+  .data-table td { padding: 0.8rem 1rem; border-top: 1px solid var(--border); }
+  .data-table tr:hover td { background: #f8fafc; }
+  .badge-active { background: #d1fae5; color: #065f46; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.74rem; font-weight: 700; }
+  .badge-low { background: #fff7ed; color: #c2410c; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.74rem; font-weight: 700; }
+  .badge-new { background: #eff6ff; color: #1d4ed8; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.74rem; font-weight: 700; }
+  .badge-fulfilled { background: #f0fdf4; color: #16a34a; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.74rem; font-weight: 700; }
+  .btn-teal { background: var(--teal); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .btn-green { background: #16a34a; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; }
+  /* Add listing form */
+  .add-form { background: #f0f9f9; border: 1.5px dashed #a8d5d3; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: none; }
+  .add-form.show { display: block; }
+  .add-form h4 { color: var(--teal); margin-bottom: 1rem; font-size: 0.95rem; }
+  .add-form .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+  .btn-save { background: var(--teal); color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-top: 0.8rem; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--teal); color: white; padding: 0.9rem 1.5rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #16a34a; }
+  .toast.error { background: #c0392b; }
+
+  @media(max-width:768px) {
+    .hero { flex-direction: column; }
+    .connect-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .add-form .form-row3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     LANDING PAGE
+══════════════════════════════ -->
+<div id="landingPage">
+<nav>
+  <div style="display:flex;align-items:center;cursor:pointer" onclick="showLanding()">
+    <div class="nav-logo">Biz<span>Bridge</span></div>
+    <span class="nav-portal-tag">Supplier Portal</span>
+  </div>
+  <ul class="nav-links">
+    <li><a onclick="requireAuth('inventory')">Inventory</a></li>
+    <li><a onclick="requireAuth('rfq')">RFQ Inbox</a></li>
+    <li><a onclick="requireAuth('orders')">Orders</a></li>
+    <li><a onclick="requireAuth('analytics')">Analytics</a></li>
+    <li><a onclick="openTrackOrder()" style="color:#7eecea;font-weight:600;">🚚 Track Shipments</a></li>
+  </ul>
+  <div class="nav-right" id="navAuth">
+    <button class="btn-login" onclick="openAuth()">Log In</button>
+    <button class="btn-register" onclick="openAuth('register')">List Your Materials</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-left">
+    <div class="badge">🏭 Verified Supplier Network</div>
+    <h1>Supply Raw Materials to<br><em>India's Growing MSMEs</em></h1>
+    <p>List your materials, receive bulk purchase orders, and build long-term supply contracts with thousands of verified MSME manufacturers across India.</p>
+    <div class="hero-btns">
+      <button class="btn-cta" onclick="openAuth('register')">Start Supplying Today →</button>
+      <button class="btn-ghost" onclick="showToast('Demo video coming soon! 🎬')">Watch Demo</button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="supply-panel">
+      <div class="sp-title"><span>📦 My Material Listings</span><span class="sp-badge">LIVE</span></div>
+      <div class="supply-list">
+        <div class="supply-item"><div class="si-info"><span class="si-icon">🧵</span><div><div class="si-name">Raw Cotton Bales</div><div class="si-cat">Textiles</div></div></div><div class="si-right"><div class="si-price">₹62/kg</div><div class="si-qty">1,200 kg available</div><div><span class="si-status-active">Active</span></div></div></div>
+        <div class="supply-item"><div class="si-info"><span class="si-icon">🌾</span><div><div class="si-name">Groundnut Seeds</div><div class="si-cat">Agriculture</div></div></div><div class="si-right"><div class="si-price">₹185/kg</div><div class="si-qty">800 kg available</div><div><span class="si-status-active">Active</span></div></div></div>
+        <div class="supply-item"><div class="si-info"><span class="si-icon">⚙️</span><div><div class="si-name">MS Steel Rods</div><div class="si-cat">Manufacturing</div></div></div><div class="si-right"><div class="si-price">₹68/kg</div><div class="si-qty">200 kg left</div><div><span class="si-status-low">Low Stock</span></div></div></div>
+        <div class="supply-item"><div class="si-info"><span class="si-icon">🌿</span><div><div class="si-name">Neem Oil Extract</div><div class="si-cat">Health & Wellness</div></div></div><div class="si-right"><div class="si-price">₹420/L</div><div class="si-qty">150 L available</div><div><span class="si-status-active">Active</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <p class="section-label">Platform Benefits</p>
+  <h2 class="section-title">Built for Suppliers & Producers</h2>
+  <p class="section-sub">Whether you're a farmer, factory, or trader — manage your supply business professionally and reach verified MSME buyers.</p>
+  <div class="grid3">
+    <div class="feat-card" onclick="requireAuth('inventory')"><div class="feat-icon">📋</div><div class="feat-title">Smart Inventory Listings</div><div class="feat-desc">List unlimited raw materials with specs, MOQ, pricing tiers, and real-time stock updates.</div></div>
+    <div class="feat-card" onclick="requireAuth('rfq')"><div class="feat-icon">🏭</div><div class="feat-title">Direct MSME Access</div><div class="feat-desc">Receive RFQs and bulk purchase orders directly from verified MSME manufacturers.</div></div>
+    <div class="feat-card" onclick="requireAuth('orders')"><div class="feat-icon">💰</div><div class="feat-title">Transparent Pricing</div><div class="feat-desc">Set tiered pricing for bulk orders, negotiate with buyers, and build long-term contracts.</div></div>
+    <div class="feat-card" onclick="requireAuth('orders')"><div class="feat-icon">🚛</div><div class="feat-title">Logistics Support</div><div class="feat-desc">Integrated freight and logistics partners for pan-India delivery with real-time tracking.</div></div>
+    <div class="feat-card" onclick="requireAuth('analytics')"><div class="feat-icon">🔐</div><div class="feat-title">Secure Transactions</div><div class="feat-desc">Escrow-based payment system ensures payment before dispatching large bulk orders.</div></div>
+    <div class="feat-card" onclick="requireAuth('analytics')"><div class="feat-icon">📊</div><div class="feat-title">Demand Forecasting</div><div class="feat-desc">See seasonal demand trends and plan production and stocking accordingly.</div></div>
+  </div>
+</section>
+
+<section class="materials-section">
+  <p class="section-label">Material Categories</p>
+  <h2 class="section-title">What Can You List?</h2>
+  <p class="section-sub">We support suppliers from every sector — agricultural, industrial, chemical, and beyond.</p>
+  <div class="materials-grid">
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🌾</span><span class="mat-label">Agri Products</span><span class="mat-count">2,400+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🧵</span><span class="mat-label">Textiles</span><span class="mat-count">1,850+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">⚙️</span><span class="mat-label">Metals & Alloys</span><span class="mat-count">980+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🧪</span><span class="mat-label">Chemicals</span><span class="mat-count">730+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🪵</span><span class="mat-label">Wood & Bamboo</span><span class="mat-count">620+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🌿</span><span class="mat-label">Herbal & Natural</span><span class="mat-count">540+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">🔩</span><span class="mat-label">Hardware Parts</span><span class="mat-count">410+ listings</span></div>
+    <div class="mat-card" onclick="requireAuth('inventory')"><span class="mat-icon">📦</span><span class="mat-label">Packaging</span><span class="mat-count">390+ listings</span></div>
+  </div>
+</section>
+
+<section class="connect-section">
+  <p class="section-label">B2B Network</p>
+  <h2 class="section-title">Connect With MSME Buyers</h2>
+  <div class="connect-grid">
+    <div class="connect-info">
+      <p>Thousands of MSME business owners on BizBridge are actively looking for reliable raw material suppliers like you. Join the network and start receiving purchase inquiries today.</p>
+      <div class="connect-perks">
+        <div class="perk">Free supplier profile & listing</div>
+        <div class="perk">Verified buyer badges for trust</div>
+        <div class="perk">Instant RFQ notifications</div>
+        <div class="perk">Multi-year supply contract tools</div>
+        <div class="perk">GST invoice generation</div>
+      </div>
+    </div>
+    <div class="connect-stats">
+      <div class="cstat"><span class="val">12K+</span><span class="lbl">MSME Buyers Active</span></div>
+      <div class="cstat"><span class="val">₹48Cr</span><span class="lbl">Supplies Traded Monthly</span></div>
+      <div class="cstat"><span class="val">340+</span><span class="lbl">Districts Covered</span></div>
+      <div class="cstat"><span class="val">96%</span><span class="lbl">On-time Payment Rate</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="redirect-banner">
+  <div class="rb-text">
+    <h3>🛍️ See the End Journey of Your Materials</h3>
+    <p>Your raw materials power the products sold on our Customer Marketplace.</p>
+  </div>
+  <a href="customer-marketplace.html" class="rb-btn">🛒 Visit Customer Marketplace →</a>
+</div>
+
+<footer><p>© 2025 <span>BizBridge</span> Supplier Portal — Powering India's Supply Chains.</p></footer>
+</div><!-- /landingPage -->
+
+
+<!-- ══════════════════════════════
+     DASHBOARD PAGE
+══════════════════════════════ -->
+<div id="dashboardPage">
+  <div class="dash-topbar">
+    <div class="logo" onclick="showLanding()">Biz<span>Bridge</span> <small style="font-family:'DM Sans';font-size:0.65rem;opacity:0.6;letter-spacing:2px;text-transform:uppercase;margin-left:4px;">Supplier</small></div>
+    <div class="dash-user">
+      <div class="dash-avatar" id="dashAvatar">?</div>
+      <span class="dash-name" id="dashName">Supplier</span>
+      <button class="btn-dash-logout" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+  <div class="dash-header">
+    <h2>Welcome, <span id="dashGreet">Supplier</span> 👋</h2>
+    <p id="dashCompany">Your supplier dashboard</p>
+  </div>
+  <div class="dash-body">
+    <div class="dash-tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="tab-btn" onclick="switchTab('inventory')">📦 Inventory</button>
+      <button class="tab-btn" onclick="switchTab('rfq')">📥 RFQ Inbox</button>
+      <button class="tab-btn" onclick="switchTab('orders')">🚛 Orders</button>
+      <button class="tab-btn" onclick="switchTab('analytics')">📈 Analytics</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="metric-grid">
+        <div class="metric-card"><div class="icon">📦</div><div class="val" id="m-listings">0</div><div class="lbl">Active Listings</div><div class="chg">↑ Live on platform</div></div>
+        <div class="metric-card"><div class="icon">📥</div><div class="val">8</div><div class="lbl">Pending RFQs</div><div class="chg">↑ 3 new today</div></div>
+        <div class="metric-card"><div class="icon">💰</div><div class="val">₹4.8L</div><div class="lbl">Revenue This Month</div><div class="chg">↑ +22% vs last</div></div>
+        <div class="metric-card"><div class="icon">🚛</div><div class="val">24</div><div class="lbl">Shipments Active</div><div class="chg">↑ On track</div></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header"><h3>Recent RFQ Requests</h3><span style="color:var(--gray);font-size:0.82rem;">From verified MSMEs</span></div>
+        <div class="dash-card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>MSME Buyer</th><th>Material Needed</th><th>Quantity</th><th>Budget</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="overviewRFQ"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="tab-content" id="tab-inventory">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>My Material Listings</h3>
+          <button class="btn-teal" onclick="toggleAddForm()">+ Add Listing</button>
+        </div>
+        <div class="dash-card-body">
+          <div class="add-form" id="addForm">
+            <h4>Add New Material Listing</h4>
+            <div class="form-row3">
+              <div class="form-group"><label>Material Name</label><input id="matName" placeholder="e.g. Raw Cotton Bales"></div>
+              <div class="form-group"><label>Price</label><input id="matPrice" placeholder="e.g. ₹62/kg"></div>
+              <div class="form-group"><label>Quantity Available</label><input id="matQty" placeholder="e.g. 1200 kg"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Category</label>
+                <select id="matCat"><option>Textiles</option><option>Agriculture</option><option>Manufacturing</option><option>Chemicals</option><option>Wood & Bamboo</option><option>Herbal & Natural</option><option>Hardware</option><option>Packaging</option></select>
+              </div>
+              <div class="form-group"><label>Unit</label>
+                <select id="matUnit"><option>kg</option><option>litre</option><option>tonne</option><option>piece</option><option>bundle</option><option>bag</option></select>
+              </div>
+            </div>
+            <button class="btn-save" onclick="addListing()">✅ Save Listing</button>
+            <button onclick="toggleAddForm()" style="background:none;border:none;color:var(--gray);cursor:pointer;margin-left:1rem;font-size:0.88rem;">Cancel</button>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Material</th><th>Category</th><th>Price</th><th>Quantity</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFQ INBOX -->
+    <div class="tab-content" id="tab-rfq">
+      <div class="dash-card">
+        <div class="dash-card-header"><h3>RFQ Inbox</h3><span style="background:#eff6ff;color:#1d4ed8;padding:0.2rem 0.7rem;border-radius:6px;font-size:0.78rem;font-weight:700;">8 New Requests</span></div>
+        <div class="dash-card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>MSME Buyer</th><th>Material</th><th>Qty Needed</th><th>Budget</th><th>Delivery By</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="rfqTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="tab-content" id="tab-orders">
+      <div class="dash-card">
+        <div class="dash-card-header"><h3>Supply Orders</h3></div>
+        <div class="dash-card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>Order ID</th><th>MSME</th><th>Material</th><th>Quantity</th><th>Value</th><th>Status</th></tr></thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-content" id="tab-analytics">
+      <div class="metric-grid">
+        <div class="metric-card"><div class="icon">👁️</div><div class="val">3,240</div><div class="lbl">Listing Views</div><div class="chg">↑ +18% this month</div></div>
+        <div class="metric-card"><div class="icon">🤝</div><div class="val">68%</div><div class="lbl">RFQ Response Rate</div><div class="chg">↑ Above average</div></div>
+        <div class="metric-card"><div class="icon">📦</div><div class="val">₹48Cr</div><div class="lbl">Platform GMV</div><div class="chg">↑ Your contribution</div></div>
+        <div class="metric-card"><div class="icon">⭐</div><div class="val">4.6</div><div class="lbl">Buyer Rating</div><div class="chg">↑ 89 reviews</div></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header"><h3>Top Materials by Revenue</h3></div>
+        <div class="dash-card-body" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>Material</th><th>Orders</th><th>Revenue</th><th>Avg. Order Size</th></tr></thead>
+            <tbody id="analyticsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /dashboardPage -->
+
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-logo">Biz<span style="color:var(--accent)">Bridge</span> Supplier</div>
+    <h2>Welcome Back</h2>
+    <p class="modal-sub">Log in to your supplier account</p>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.55rem 0.85rem;font-size:0.79rem;color:#0369a1;margin-bottom:0.8rem;">🔗 <strong>Universal Login</strong> — Your account works across all BizBridge portals</div>
+    <div class="alert alert-error" id="loginError"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="supplier@yourbusiness.com"><div class="field-error" id="loginEmailErr">Valid email required.</div></div>
+    <div class="form-group"><label>Password</label><div class="password-wrap"><input type="password" id="loginPassword" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"><button class="toggle-pw" onclick="togglePw('loginPassword',this)">👁️</button></div><div class="field-error" id="loginPasswordErr">Password required.</div></div>
+    <button class="btn-submit" id="loginBtn" onclick="doLogin()">🔐 Log In</button>
+    <div class="modal-switch">New supplier? <a onclick="switchModal('loginModal','registerModal')">Register here →</a></div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+    <div class="modal-logo">Biz<span style="color:var(--accent)">Bridge</span> Supplier</div>
+    <h2>Register as Supplier</h2>
+    <p class="modal-sub">Start supplying to verified MSMEs across India</p>
+    <div class="alert alert-error" id="registerError"></div>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input id="regFirst" placeholder="Suresh"><div class="field-error" id="regFirstErr">Required.</div></div>
+      <div class="form-group"><label>Last Name</label><input id="regLast" placeholder="Patel"><div class="field-error" id="regLastErr">Required.</div></div>
+    </div>
+    <div class="form-group"><label>Company / Business Name</label><input id="regCompany" placeholder="e.g. Patel Raw Materials Co."><div class="field-error" id="regCompanyErr">Business name required.</div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Material Category</label>
+        <select id="regCategory"><option value="">Select primary category</option><option>Textiles</option><option>Agriculture</option><option>Manufacturing</option><option>Chemicals</option><option>Wood & Bamboo</option><option>Herbal & Natural</option><option>Hardware</option><option>Packaging</option></select>
+        <div class="field-error" id="regCategoryErr">Please select.</div>
+      </div>
+      <div class="form-group"><label>State</label>
+        <select id="regState"><option value="">Select state</option><option>Gujarat</option><option>Maharashtra</option><option>Punjab</option><option>Haryana</option><option>Rajasthan</option><option>Uttar Pradesh</option><option>Telangana</option><option>Tamil Nadu</option><option>Karnataka</option><option>Other</option></select>
+        <div class="field-error" id="regStateErr">Please select.</div>
+      </div>
+    </div>
+    <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="supplier@yourbusiness.com"><div class="field-error" id="regEmailErr">Valid email required.</div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input id="regPhone" placeholder="+91 98765 43210"><div class="field-error" id="regPhoneErr">10-digit number required.</div></div>
+      <div class="form-group"><label>GST Number (optional)</label><input id="regGST" placeholder="22AAAAA0000A1Z5" style="text-transform:uppercase"></div>
+    </div>
+    <div class="form-group"><label>Password</label><div class="password-wrap"><input type="password" id="regPassword" placeholder="Minimum 8 characters"><button class="toggle-pw" onclick="togglePw('regPassword',this)">👁️</button></div><div class="field-error" id="regPasswordErr">Min 8 characters.</div></div>
+    <button class="btn-submit" id="registerBtn" onclick="doRegister()">🚀 Create Supplier Account</button>
+    <div class="modal-switch">Already registered? <a onclick="switchModal('registerModal','loginModal')">Log in →</a></div>
+  </div>
+</div>
+
+<!-- EDIT LISTING MODAL -->
+<div class="modal-overlay" id="editListingModal">
+  <div class="modal" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('editListingModal')">✕</button>
+    <div class="modal-logo">Biz<span style="color:var(--accent)">Bridge</span> Supplier</div>
+    <h2>Edit Listing</h2>
+    <p class="modal-sub">Update your material listing details below.</p>
+    <input type="hidden" id="editListIndex">
+    <div class="form-group"><label>Material Name</label><input id="editListName" placeholder="e.g. Raw Cotton Bales"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Price</label><input id="editListPrice" placeholder="e.g. ₹62/kg"></div>
+      <div class="form-group"><label>Quantity Available</label><input id="editListQty" placeholder="e.g. 1200 kg"></div>
+    </div>
+    <div class="form-group"><label>Category</label>
+      <select id="editListCat"><option>Textiles</option><option>Agriculture</option><option>Manufacturing</option><option>Chemicals</option><option>Wood & Bamboo</option><option>Herbal & Natural</option><option>Hardware</option><option>Packaging</option></select>
+    </div>
+    <button class="btn-submit" onclick="saveEditListing()">💾 Save Changes</button>
+  </div>
+</div>
+
+<!-- SEND QUOTE MODAL -->
+<div class="modal-overlay" id="sendQuoteModal">
+  <div class="modal" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('sendQuoteModal')">✕</button>
+    <div class="modal-logo">Biz<span style="color:var(--accent)">Bridge</span> Supplier</div>
+    <h2>Send Quote</h2>
+    <p class="modal-sub">Send your pricing quote to this MSME buyer.</p>
+    <div class="form-group"><label>MSME Buyer</label><input id="quoteBuyer" readonly style="background:#f0f4f8;"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Your Quoted Price (₹)</label><input id="quotePrice" type="text" placeholder="e.g. ₹58/kg"></div>
+      <div class="form-group"><label>Delivery By</label><input id="quoteDelivery" type="date"></div>
+    </div>
+    <div class="form-group"><label>Additional Notes (optional)</label><input id="quoteNotes" placeholder="e.g. Minimum order 500 kg, can negotiate"></div>
+    <button class="btn-submit" style="background:var(--teal);" onclick="submitQuote()">📤 Send Quote</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// DATABASE
+// ══════════════════════════════
+// ═══════════════════════════════════════════════
+// BIZBRIDGE UNIFIED DATABASE
+// All three portals share this single storage key: bb_bizbridge_db
+// ═══════════════════════════════════════════════
+const UDB = {
+  _key: 'bb_bizbridge_db',
+  _get: function() {
+    try { return JSON.parse(localStorage.getItem(this._key) || 'null') || { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] }; } catch(e) { return { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] }; }
+  },
+  _save: function(data) { localStorage.setItem(this._key, JSON.stringify(data)); },
+
+  // MSME Users
+  getMsmeUsers: function() { return this._get().msmeUsers; },
+  saveMsmeUser: function(user) { const d=this._get(); const i=d.msmeUsers.findIndex(u=>u.email===user.email); if(i>=0) d.msmeUsers[i]=user; else d.msmeUsers.push(user); this._save(d); },
+
+  // Supplier Users
+  getSupplierUsers: function() { return this._get().supplierUsers; },
+  saveSupplierUser: function(user) { const d=this._get(); const i=d.supplierUsers.findIndex(u=>u.email===user.email); if(i>=0) d.supplierUsers[i]=user; else d.supplierUsers.push(user); this._save(d); },
+
+  // Customer Users
+  getCustomerUsers: function() { return this._get().customerUsers; },
+  saveCustomerUser: function(user) { const d=this._get(); const i=d.customerUsers.findIndex(u=>u.email===user.email); if(i>=0) d.customerUsers[i]=user; else d.customerUsers.push(user); this._save(d); },
+
+  getAllUsers: function() {
+    return [
+      ...this.getMsmeUsers().map(u => ({...u, _type:'msme'})),
+      ...this.getSupplierUsers().map(u => ({...u, _type:'supplier'})),
+      ...this.getCustomerUsers().map(u => ({...u, _type:'customer'})),
+    ];
+  },
+
+  // MSME Products (keyed by email)
+  getProducts: function(email) { return this._get().products[email] || []; },
+  saveProducts: function(email, prods) { const d=this._get(); d.products[email]=prods; this._save(d); },
+  getAllProducts: function() { const d=this._get(); return Object.values(d.products).flat(); },
+
+  // Supplier Listings (keyed by email)
+  getListings: function(email) { return this._get().listings[email] || []; },
+  saveListings: function(email, items) { const d=this._get(); d.listings[email]=items; this._save(d); },
+  getAllListings: function() { const d=this._get(); return Object.values(d.listings).flat(); },
+
+  // Customer Orders (keyed by email)
+  getCustomerOrders: function(email) { return this._get().customerOrders[email] || []; },
+  saveCustomerOrders: function(email, orders) { const d=this._get(); d.customerOrders[email]=orders; this._save(d); },
+
+  // Cart (global)
+  getCart: function() { return this._get().cart; },
+  saveCart: function(cart) { const d=this._get(); d.cart=cart; this._save(d); },
+
+  // RFQs
+  getRFQs: function() { return this._get().rfqs; },
+  saveRFQ: function(rfq) { const d=this._get(); d.rfqs.push(rfq); this._save(d); },
+
+  // Supply Orders
+  getSupplyOrders: function() { return this._get().supplyOrders; },
+  saveSupplyOrder: function(order) { const d=this._get(); d.supplyOrders.push(order); this._save(d); },
+
+  // Catalog Stock — shared across all portals, keyed by product id
+  getCatalogStock: function() { const d=this._get(); return d.catalogStock || {}; },
+  getCatalogStockById: function(id) { const s=this.getCatalogStock(); return (s[id] !== undefined) ? s[id] : null; },
+
+  // Sessions — unified localStorage key, shared across all portals
+  getSession: function() { try { return JSON.parse(localStorage.getItem('bb_session')||'null'); } catch(e) { return null; } },
+  setSession: function(user) { localStorage.setItem('bb_session', JSON.stringify(user)); },
+  clearSession: function() { localStorage.removeItem('bb_session'); },
+};
+
+// Supplier Portal DB adapter
+const DB = {
+  getUsers: () => UDB.getSupplierUsers(),
+  saveUsers: (users) => { users.forEach(u => UDB.saveSupplierUser(u)); },
+  getSession: () => UDB.getSession(),
+  setSession: u => UDB.setSession(u),
+  clearSession: () => UDB.clearSession(),
+  getListings: email => UDB.getListings(email),
+  saveListings: (email, l) => UDB.saveListings(email, l),
+};
+
+// Seed demo
+(function() {
+  const users = DB.getUsers();
+  if (!users.find(u => u.email === 'demo@supplier.in')) {
+    UDB.saveSupplierUser({ first:'Demo', last:'Supplier', company:'Demo Supply Co.', category:'Textiles', state:'Gujarat', email:'demo@supplier.in', phone:'9876543210', gst:'24AADCS1234A1ZO', password:'demo1234', createdAt: new Date().toISOString() });
+  }
+  if (DB.getListings('demo@supplier.in').length === 0) {
+    DB.saveListings('demo@supplier.in', [
+      { name:'Raw Cotton Bales', price:'₹62/kg', qty:'1200 kg', category:'Textiles', unit:'kg', status:'active' },
+      { name:'Groundnut Seeds', price:'₹185/kg', qty:'800 kg', category:'Agriculture', unit:'kg', status:'active' },
+      { name:'MS Steel Rods', price:'₹68/kg', qty:'200 kg', category:'Manufacturing', unit:'kg', status:'low' },
+      { name:'Neem Oil Extract', price:'₹420/L', qty:'150 L', category:'Herbal & Natural', unit:'litre', status:'active' },
+    ]);
+  }
+})();
+
+const SAMPLE_RFQS = [
+  { buyer:'Sharma Textiles', material:'Raw Cotton', qty:'500 kg', budget:'₹32,000', delivery:'Apr 5', status:'new' },
+  { buyer:'GreenChem Pvt.', material:'Neem Oil', qty:'80 L', budget:'₹35,000', delivery:'Apr 8', status:'new' },
+  { buyer:'MetalPro Ind.', material:'Steel Rods', qty:'1 Tonne', budget:'₹70,000', delivery:'Apr 10', status:'new' },
+  { buyer:'AgriPlus Foods', material:'Groundnut', qty:'300 kg', budget:'₹58,000', delivery:'Apr 12', status:'pending' },
+  { buyer:'Weavers Co-op', material:'Cotton Bales', qty:'200 kg', budget:'₹14,000', delivery:'Apr 15', status:'pending' },
+];
+
+const SAMPLE_ORDERS = [
+  { id:'#S4421', msme:'Sharma Textiles', material:'Raw Cotton Bales', qty:'500 kg', value:'₹31,000', status:'fulfilled' },
+  { id:'#S4420', msme:'Kerala Naturals', material:'Neem Oil Extract', qty:'60 L', value:'₹25,200', status:'fulfilled' },
+  { id:'#S4419', msme:'MetalPro Ind.', material:'MS Steel Rods', qty:'800 kg', value:'₹54,400', status:'active' },
+  { id:'#S4418', msme:'AgriPlus Foods', material:'Groundnut Seeds', qty:'250 kg', value:'₹46,250', status:'active' },
+];
+
+const ANALYTICS_DATA = [
+  { material:'Raw Cotton Bales', orders:18, revenue:'₹2.1L', avg:'₹11,700' },
+  { material:'Groundnut Seeds', orders:12, revenue:'₹1.4L', avg:'₹11,600' },
+  { material:'MS Steel Rods', orders:9, revenue:'₹89,000', avg:'₹9,900' },
+  { material:'Neem Oil Extract', orders:7, revenue:'₹62,000', avg:'₹8,900' },
+];
+
+// ══════════════════════════════
+// AUTH
+// ══════════════════════════════
+function openAuth(tab) {
+  const returnFile = location.pathname.split('/').pop() || 'supplier-portal.html';
+  window.location.href = 'auth.html?return=' + encodeURIComponent(returnFile) + (tab ? '&tab=' + tab : '');
+}
+
+function doLogin() {
+  clearErrors();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  let ok = true;
+  if (!email.includes('@')) { showFE('loginEmailErr','loginEmail'); ok=false; }
+  if (!pw) { showFE('loginPasswordErr','loginPassword'); ok=false; }
+  if (!ok) return;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Logging in...';
+  setTimeout(() => {
+    // Search all user types for cross-portal login
+    const allUsers = [
+      ...UDB.getSupplierUsers().map(u => ({...u, _type:'supplier'})),
+      ...UDB.getMsmeUsers().map(u => ({...u, _type:'msme', first: u.first||u.firstName, last: u.last||u.lastName, company: u.company||u.bizName})),
+      ...UDB.getCustomerUsers().map(u => ({...u, _type:'customer', company: u.company||u.first+' '+u.last})),
+    ];
+    let user = allUsers.find(u => u.email===email && u.password===pw);
+    btn.disabled=false; btn.textContent='🔐 Log In';
+    if (!user) { showAlert('loginError','❌ Invalid credentials. Try demo@bizbridge.in / demo1234'); return; }
+    DB.setSession(user);
+    closeModal('loginModal');
+    enterDashboard(user);
+  }, 800);
+}
+
+function doRegister() {
+  clearErrors();
+  const f = {
+    regFirst: v => v.length >= 1,
+    regLast: v => v.length >= 1,
+    regCompany: v => v.length >= 3,
+    regCategory: v => v !== '',
+    regState: v => v !== '',
+    regEmail: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    regPhone: v => { const n = v.replace(/\s/g,'').replace(/^\+?91/,''); return /^[6-9]\d{9}$/.test(n); },
+    regPassword: v => v.length >= 8,
+  };
+  let ok = true;
+  for (const k in f) {
+    const el = document.getElementById(k);
+    if (!f[k](el.value.trim())) { showFE(k+'Err', k); ok=false; }
+  }
+  if (!ok) return;
+  const email = document.getElementById('regEmail').value.trim();
+  const allExist = [...UDB.getSupplierUsers(),...UDB.getMsmeUsers(),...UDB.getCustomerUsers()]; if (allExist.find(u => u.email===email)) { showAlert('registerError','❌ Email already registered across BizBridge. Please log in.'); return; }
+  const btn = document.getElementById('registerBtn');
+  btn.disabled=true; btn.textContent='Creating...';
+  setTimeout(() => {
+    const user = { first:document.getElementById('regFirst').value.trim(), last:document.getElementById('regLast').value.trim(), company:document.getElementById('regCompany').value.trim(), category:document.getElementById('regCategory').value, state:document.getElementById('regState').value, email, phone:document.getElementById('regPhone').value.trim(), gst:document.getElementById('regGST').value.trim().toUpperCase(), password:document.getElementById('regPassword').value, _type:'supplier', createdAt:new Date().toISOString() };
+    UDB.saveSupplierUser(user);
+    DB.setSession(user);
+    btn.disabled=false; btn.textContent='🚀 Create Supplier Account';
+    closeModal('registerModal');
+    showToast('🎉 Welcome to BizBridge Supplier Network, '+user.first+'!','success');
+    setTimeout(() => enterDashboard(user), 600);
+  }, 1000);
+}
+
+function logout() { DB.clearSession(); showLanding(); showToast('Logged out successfully.'); }
+
+function requireAuth(tab) {
+  const s = DB.getSession();
+  if (!s) { openAuth(); return; }
+  enterDashboard(s, tab);
+}
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function showLanding() {
+  document.getElementById('landingPage').style.display='block';
+  document.getElementById('dashboardPage').style.display='none';
+  const s = DB.getSession();
+  const nav = document.getElementById('navAuth');
+  nav.innerHTML = s
+    ? `<div style="display:flex;align-items:center;gap:0.8rem"><span style="color:white;font-weight:600;font-size:0.9rem;">${s.first||s.firstName}</span><button class="btn-register" onclick="enterDashboard(DB.getSession())">Go to Dashboard</button><button class="btn-logout" onclick="logout()">Log Out</button></div>`
+    : `<button class="btn-login" onclick="openAuth()">Log In</button><button class="btn-register" onclick="openAuth('register')">List Your Materials</button>`;
+}
+
+function enterDashboard(user, tab) {
+  const first = user.first || user.firstName || 'User';
+  const last = user.last || user.lastName || '';
+  const company = user.company || user.bizName || (first + ' ' + last).trim();
+  document.getElementById('landingPage').style.display='none';
+  document.getElementById('dashboardPage').style.display='block';
+  document.getElementById('dashAvatar').textContent = first[0] || '?';
+  document.getElementById('dashName').textContent = first+' '+last;
+  document.getElementById('dashGreet').textContent = first;
+  document.getElementById('dashCompany').textContent = company;
+  renderDashboard(user);
+  if (tab) switchTab(tab);
+}
+
+// ══════════════════════════════
+// RENDER
+// ══════════════════════════════
+function renderDashboard(user) {
+  const listings = DB.getListings(user.email);
+  document.getElementById('m-listings').textContent = listings.length;
+  renderRFQ('overviewRFQ', SAMPLE_RFQS.slice(0,3), false);
+  renderRFQ('rfqTable', SAMPLE_RFQS, true);
+  renderInventory(user.email);
+  renderOrders();
+  renderAnalytics(user.email);
+}
+
+function renderRFQ(id, data, full) {
+  document.getElementById(id).innerHTML = data.map(r => `
+    <tr>
+      <td><strong>${r.buyer}</strong></td>
+      <td>${r.material}</td>
+      <td>${r.qty}</td>
+      <td><strong>${r.budget}</strong></td>
+      ${full ? `<td>${r.delivery}</td>` : ''}
+      <td><span class="badge-${r.status==='new'?'new':'active'}">${r.status==='new'?'New Request':'Pending'}</span></td>
+      <td><button class="btn-green" onclick="openSendQuote(\`${r.buyer}\`)">Send Quote</button></td>
+    </tr>`).join('');
+}
+
+function renderInventory(email) {
+  const listings = DB.getListings(email);
+  const tb = document.getElementById('inventoryTable');
+  if (listings.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:2rem;">No listings yet. Add your first material above!</td></tr>'; return; }
+  tb.innerHTML = listings.map((l,i) => `
+    <tr>
+      <td><strong>${l.name}</strong></td>
+      <td>${l.category}</td>
+      <td>${l.price}</td>
+      <td>${l.qty}</td>
+      <td><span class="badge-${l.qty.includes('200')||parseInt(l.qty)<300?'low':'active'}">${l.qty.includes('200')||parseInt(l.qty)<300?'Low Stock':'Active'}</span></td>
+      <td>
+        <button onclick="editListing(${i})" style="background:none;border:1px solid #bae6fd;color:#0369a1;border-radius:5px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.8rem;margin-right:0.3rem;">✏️ Edit</button>
+        <button onclick="deleteListing(${i})" style="background:none;border:1px solid #fca5a5;color:#c0392b;border-radius:5px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.8rem;">Remove</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderOrders() {
+  document.getElementById('ordersTable').innerHTML = SAMPLE_ORDERS.map(o => `
+    <tr>
+      <td><strong>${o.id}</strong></td>
+      <td>${o.msme}</td>
+      <td>${o.material}</td>
+      <td>${o.qty}</td>
+      <td><strong>${o.value}</strong></td>
+      <td><span class="badge-${o.status}">${o.status==='fulfilled'?'Fulfilled':'Active'}</span></td>
+      <td><button onclick="window.open('logistics-tracker.html','_blank')" style="background:#0d7377;color:white;border:none;padding:0.3rem 0.7rem;border-radius:5px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">🚚 Track</button></td>
+    </tr>`).join('');
+}
+
+function renderAnalytics(email) {
+  const listings = DB.getListings(email);
+  const extra = listings.map(l => ({ material:l.name, orders:Math.floor(Math.random()*10+2), revenue:'₹'+(parseInt(l.price||'50')*Math.floor(Math.random()*500+100)).toLocaleString('en-IN'), avg:'₹'+Math.floor(Math.random()*10000+5000).toLocaleString('en-IN') }));
+  const all = [...ANALYTICS_DATA, ...extra.filter(e => !ANALYTICS_DATA.find(a => a.material===e.material))];
+  document.getElementById('analyticsTable').innerHTML = all.map(a => `
+    <tr><td>${a.material}</td><td>${a.orders}</td><td><strong>${a.revenue}</strong></td><td>${a.avg}</td></tr>`).join('');
+}
+
+// ══════════════════════════════
+// LISTING CRUD
+// ══════════════════════════════
+function toggleAddForm() { document.getElementById('addForm').classList.toggle('show'); }
+
+function addListing() {
+  const name = document.getElementById('matName').value.trim();
+  const price = document.getElementById('matPrice').value.trim();
+  const qty = document.getElementById('matQty').value.trim();
+  const cat = document.getElementById('matCat').value;
+  const unit = document.getElementById('matUnit').value;
+  if (!name||!price||!qty) { showToast('Please fill all fields.','error'); return; }
+  const s = DB.getSession();
+  const listings = DB.getListings(s.email);
+  listings.push({ name, price, qty, category:cat, unit, status:'active' });
+  DB.saveListings(s.email, listings);
+  document.getElementById('matName').value=''; document.getElementById('matPrice').value=''; document.getElementById('matQty').value='';
+  toggleAddForm();
+  renderInventory(s.email);
+  document.getElementById('m-listings').textContent = listings.length;
+  showToast('✅ Listing added successfully!','success');
+}
+
+function deleteListing(i) {
+  const s = DB.getSession();
+  const listings = DB.getListings(s.email);
+  listings.splice(i,1);
+  DB.saveListings(s.email, listings);
+  renderInventory(s.email);
+  document.getElementById('m-listings').textContent = listings.length;
+  showToast('Listing removed.');
+}
+
+function editListing(i) {
+  const s = DB.getSession();
+  const listings = DB.getListings(s.email);
+  const l = listings[i];
+  document.getElementById('editListName').value = l.name;
+  document.getElementById('editListPrice').value = l.price;
+  document.getElementById('editListQty').value = l.qty;
+  document.getElementById('editListCat').value = l.category;
+  document.getElementById('editListIndex').value = i;
+  openModal('editListingModal');
+}
+
+function saveEditListing() {
+  const s = DB.getSession();
+  const listings = DB.getListings(s.email);
+  const i = parseInt(document.getElementById('editListIndex').value);
+  const name = document.getElementById('editListName').value.trim();
+  const price = document.getElementById('editListPrice').value.trim();
+  const qty = document.getElementById('editListQty').value.trim();
+  const category = document.getElementById('editListCat').value;
+  if (!name || !price || !qty) { showToast('Please fill all fields.', 'error'); return; }
+  listings[i] = { ...listings[i], name, price, qty, category };
+  DB.saveListings(s.email, listings);
+  closeModal('editListingModal');
+  renderInventory(s.email);
+  showToast('✅ Listing updated successfully!', 'success');
+}
+
+function openSendQuote(buyerName) {
+  document.getElementById('quoteBuyer').value = buyerName;
+  document.getElementById('quotePrice').value = '';
+  document.getElementById('quoteDelivery').value = '';
+  document.getElementById('quoteNotes').value = '';
+  openModal('sendQuoteModal');
+}
+
+function submitQuote() {
+  const price = document.getElementById('quotePrice').value.trim();
+  const delivery = document.getElementById('quoteDelivery').value.trim();
+  if (!price || !delivery) { showToast('Please fill price and delivery date.', 'error'); return; }
+  const buyer = document.getElementById('quoteBuyer').value;
+  closeModal('sendQuoteModal');
+  showToast(`📤 Quote sent to ${buyer}! They will respond within 24 hours.`, 'success');
+}
+
+// ══════════════════════════════
+// UI HELPERS
+// ══════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const c = document.getElementById('tab-'+name);
+  if (c) c.classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => { if(b.textContent.toLowerCase().includes(name.toLowerCase())) b.classList.add('active'); });
+}
+function openModal(id) { clearErrors(); document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function switchModal(a,b) { closeModal(a); openModal(b); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('active'); }));
+let toastT;
+function showToast(msg,type) { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
+function showFE(errId, inputId) { const e=document.getElementById(errId); if(e) e.classList.add('show'); const i=document.getElementById(inputId); if(i) i.classList.add('error'); }
+function showAlert(id,msg) { const el=document.getElementById(id); el.textContent=msg; el.classList.add('show'); }
+function clearErrors() { document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('show')); document.querySelectorAll('.alert').forEach(e=>e.classList.remove('show')); document.querySelectorAll('input.error').forEach(e=>e.classList.remove('error')); }
+function togglePw(id,btn) { const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; btn.textContent=i.type==='password'?'👁️':'🙈'; }
+
+// TRACK SHIPMENTS
+function openTrackOrder() {
+  window.open('logistics-tracker.html', '_blank');
+}
+
+// INIT
+(function() { const s=DB.getSession(); if(s) enterDashboard(s); else showLanding(); })();
+</script>
+</body>
+</html>

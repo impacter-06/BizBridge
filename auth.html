@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBridge — Sign In / Register</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a3c5e;
+    --accent: #e86c2f;
+    --green: #16a34a;
+    --light: #f0f4f8;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --border: #dde3ea;
+    --error: #e74c3c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── SPLIT LAYOUT ── */
+  .page-wrap {
+    display: flex;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 420px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, #1a3c5e 0%, #0d2440 55%, #162e4a 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem 2.8rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    border: 1px solid rgba(232,108,47,0.15);
+    bottom: -80px; right: -80px;
+  }
+  .left-panel::after {
+    content: '';
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.07);
+    top: 80px; right: 40px;
+  }
+
+  .left-logo {
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .left-logo span { color: var(--accent); }
+
+  .left-tagline {
+    position: relative; z-index: 1;
+  }
+  .left-tagline h2 {
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 1.85rem;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+  }
+  .left-tagline h2 em { font-style: normal; color: var(--accent); }
+  .left-tagline p {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.92rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  .portal-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .portal-link {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: white;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .portal-link:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateX(3px);
+  }
+  .portal-link .pl-icon { font-size: 1.2rem; }
+  .portal-link .pl-desc { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+
+  .left-footer {
+    color: rgba(255,255,255,0.35);
+    font-size: 0.78rem;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background: var(--white);
+  }
+
+  .auth-box {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  /* TABS */
+  .auth-tabs {
+    display: flex;
+    background: var(--light);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 2rem;
+    gap: 4px;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 0.65rem;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    background: var(--white);
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  /* PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    font-size: 1.7rem;
+    margin-bottom: 0.3rem;
+  }
+  .panel-sub {
+    color: var(--gray);
+    font-size: 0.88rem;
+    margin-bottom: 1.6rem;
+    line-height: 1.5;
+  }
+
+  /* ACCOUNT TYPE SELECTOR */
+  .account-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.7rem;
+    margin-bottom: 1.4rem;
+  }
+  .account-type {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 0.6rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafbfc;
+  }
+  .account-type:hover { border-color: #c5d5e8; background: #f0f4f8; }
+  .account-type.selected {
+    border-color: var(--accent);
+    background: #fff7f3;
+  }
+  .account-type .at-icon { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; }
+  .account-type .at-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: block;
+  }
+  .account-type .at-desc {
+    font-size: 0.7rem;
+    color: var(--gray);
+    margin-top: 0.15rem;
+    display: block;
+  }
+  .account-type.selected .at-label { color: var(--accent); }
+
+  /* FORM */
+  .form-group { margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.35rem;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 0.7rem 0.95rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+    background: #fafbfc;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--primary); background: white; }
+  .form-group input.error { border-color: var(--error); }
+  .field-error {
+    color: var(--error);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: none;
+  }
+  .field-error.show { display: block; }
+
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 2.8rem; }
+  .toggle-pw {
+    position: absolute; right: 0.8rem; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--gray); font-size: 1rem;
+  }
+
+  .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-error { background: #fef2f2; color: #c0392b; border: 1px solid #fca5a5; }
+  .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+
+  .btn-submit {
+    width: 100%;
+    padding: 0.88rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn-submit:hover { background: #d05a20; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .switch-link {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-top: 1.1rem;
+  }
+  .switch-link a {
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .switch-link a:hover { text-decoration: underline; }
+
+  /* DYNAMIC FIELDS for registration types */
+  .reg-fields { display: none; }
+  .reg-fields.show { display: block; }
+
+  /* SUCCESS screen */
+  .success-screen {
+    text-align: center;
+    padding: 2rem 1rem;
+    display: none;
+  }
+  .success-screen.show { display: block; }
+  .success-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+  .success-screen h2 {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 0.6rem;
+  }
+  .success-screen p { color: var(--gray); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+  .redirect-bar {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+  }
+  .redirect-bar strong { color: var(--primary); }
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 0.6rem;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  .portal-btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+  }
+  .portal-btn {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary);
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+  }
+  .portal-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff7f3; }
+  .portal-btn .pb-icon { font-size: 1.3rem; display: block; margin-bottom: 0.3rem; }
+
+  @media (max-width: 800px) {
+    .page-wrap { flex-direction: column; }
+    .left-panel { width: 100%; min-height: unset; padding: 2rem; }
+    .left-tagline h2 { font-size: 1.4rem; }
+    .portal-links { flex-direction: row; flex-wrap: wrap; }
+    .portal-link { flex: 1; min-width: 140px; }
+    .right-panel { padding: 2rem 1.2rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .account-types { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .account-types { grid-template-columns: 1fr; }
+    .portal-btn-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+    <a class="left-logo" href="#">Biz<span>Bridge</span></a>
+
+    <div class="left-tagline">
+      <h2>India's <em>One-Stop</em><br>Platform for MSMEs</h2>
+      <p>Finance, marketplace, suppliers, logistics, marketing &amp; legal — all connected through a single backend.</p>
+      <div class="portal-links">
+        <a class="portal-link" onclick="goToPortal('msme-portal.html')">
+          <span class="pl-icon">🏭</span>
+          <div>
+            <div>MSME Portal</div>
+            <div class="pl-desc">Sell, manage orders &amp; grow</div>
+          </div>
+        </a>
+        <a class="portal-link" onclick="goToPortal('customer-marketplace.html')">
+          <span class="pl-icon">🛍️</span>
+          <div>
+            <div>Customer Marketplace</div>
+            <div class="pl-desc">Buy direct from manufacturers</div>
+          </div>
+        </a>
+        <a class="portal-link" onclick="goToPortal('supplier-portal.html')">
+          <span class="pl-icon">🔗</span>
+          <div>
+            <div>Supplier Portal</div>
+            <div class="pl-desc">Supply raw materials to MSMEs</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="left-footer">© 2025 BizBridge. Empowering India's Small Businesses.</div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel">
+    <div class="auth-box">
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn" onclick="showTab('login')">Log In</button>
+        <button class="auth-tab" id="tabRegisterBtn" onclick="showTab('register')">Create Account</button>
+      </div>
+
+      <!-- ── LOGIN PANEL ── -->
+      <div class="tab-panel active" id="panelLogin">
+        <h2 class="panel-title">Welcome Back</h2>
+        <p class="panel-sub">Your single account works across all three BizBridge portals — MSME, Marketplace &amp; Supplier.</p>
+        <div class="alert alert-error" id="loginError"></div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@yourbusiness.com" onkeydown="if(event.key==='Enter')doLogin()">
+          <div class="field-error" id="loginEmailErr">Please enter a valid email.</div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-wrap">
+            <input type="password" id="loginPassword" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
+            <button class="toggle-pw" onclick="togglePw('loginPassword',this)" type="button">👁️</button>
+          </div>
+          <div class="field-error" id="loginPasswordErr">Password is required.</div>
+        </div>
+        <button class="btn-submit" id="loginBtn" type="button">🔐 Log In</button>
+        <div class="switch-link">Don't have an account? <a onclick="showTab('register')">Create one free →</a></div>
+
+      </div>
+
+      <!-- ── REGISTER PANEL ── -->
+      <div class="tab-panel" id="panelRegister">
+        <h2 class="panel-title">Create Account</h2>
+        <p class="panel-sub">One account for all portals. Choose your role to get started.</p>
+
+        <!-- Account Type Selector -->
+        <div class="account-types" id="accountTypes">
+          <div class="account-type selected" id="type-msme" onclick="selectType('msme')">
+            <span class="at-icon">🏭</span>
+            <span class="at-label">MSME Business</span>
+            <span class="at-desc">Sell &amp; manage your business</span>
+          </div>
+          <div class="account-type" id="type-customer" onclick="selectType('customer')">
+            <span class="at-icon">🛍️</span>
+            <span class="at-label">Customer</span>
+            <span class="at-desc">Shop from MSMEs</span>
+          </div>
+          <div class="account-type" id="type-supplier" onclick="selectType('supplier')">
+            <span class="at-icon">🔗</span>
+            <span class="at-label">Supplier</span>
+            <span class="at-desc">Supply raw materials</span>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="registerError"></div>
+
+        <!-- Common fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input id="regFirst" placeholder="Ravi">
+            <div class="field-error" id="regFirstErr">Required.</div>
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input id="regLast" placeholder="Sharma">
+            <div class="field-error" id="regLastErr">Required.</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" placeholder="you@yourbusiness.com">
+          <div class="field-error" id="regEmailErr">Please enter a valid email.</div>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input id="regPhone" placeholder="+91 98765 43210" maxlength="13">
+          <div class="field-error" id="regPhoneErr">Enter valid 10-digit number.</div>
+        </div>
+
+        <!-- MSME-specific fields -->
+        <div class="reg-fields show" id="fields-msme">
+          <div class="form-group">
+            <label>Business Name</label>
+            <input id="regBizName" placeholder="e.g. Sharma Textiles Pvt. Ltd.">
+            <div class="field-error" id="regBizNameErr">Please enter your business name.</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>GST Number</label>
+              <input id="regGST" placeholder="22AAAAA0000A1Z5" style="text-transform:uppercase">
+              <div class="field-error" id="regGSTErr">Enter valid 15-char GST number.</div>
+            </div>
+            <div class="form-group">
+              <label>Business Type</label>
+              <select id="regBizType">
+                <option value="">Select type</option>
+                <option>Manufacturer</option>
+                <option>Trader</option>
+                <option>Service Provider</option>
+                <option>Artisan / Handicraft</option>
+              </select>
+              <div class="field-error" id="regBizTypeErr">Please select a type.</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <select id="regStateMsme">
+              <option value="">Select state</option>
+              <option>Andhra Pradesh</option><option>Delhi</option><option>Gujarat</option>
+              <option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option>
+              <option>Maharashtra</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Tamil Nadu</option><option>Telangana</option><option>Uttar Pradesh</option>
+              <option>West Bengal</option><option>Other</option>
+            </select>
+            <div class="field-error" id="regStateMsmeErr">Please select your state.</div>
+          </div>
+        </div>
+
+        <!-- Customer-specific fields -->
+        <div class="reg-fields" id="fields-customer">
+          <div class="form-group">
+            <label>City</label>
+            <input id="regCity" placeholder="e.g. Hyderabad">
+            <div class="field-error" id="regCityErr">Required.</div>
+          </div>
+        </div>
+
+        <!-- Supplier-specific fields -->
+        <div class="reg-fields" id="fields-supplier">
+          <div class="form-group">
+            <label>Company / Business Name</label>
+            <input id="regCompany" placeholder="e.g. Patel Raw Materials Co.">
+            <div class="field-error" id="regCompanyErr">Business name required.</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Material Category</label>
+              <select id="regCategory">
+                <option value="">Select primary category</option>
+                <option>Textiles</option><option>Agriculture</option>
+                <option>Manufacturing</option><option>Chemicals</option>
+                <option>Wood &amp; Bamboo</option><option>Herbal &amp; Natural</option>
+                <option>Hardware</option><option>Packaging</option>
+              </select>
+              <div class="field-error" id="regCategoryErr">Please select.</div>
+            </div>
+            <div class="form-group">
+              <label>State</label>
+              <select id="regStateSupplier">
+                <option value="">Select state</option>
+                <option>Gujarat</option><option>Maharashtra</option><option>Punjab</option>
+                <option>Haryana</option><option>Rajasthan</option><option>Uttar Pradesh</option>
+                <option>Telangana</option><option>Tamil Nadu</option><option>Karnataka</option>
+                <option>Other</option>
+              </select>
+              <div class="field-error" id="regStateSupplierErr">Please select.</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>GST Number (optional)</label>
+            <input id="regSupplierGST" placeholder="22AAAAA0000A1Z5" style="text-transform:uppercase">
+          </div>
+        </div>
+
+        <!-- Password (always last) -->
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-wrap">
+            <input type="password" id="regPassword" placeholder="Minimum 8 characters">
+            <button class="toggle-pw" onclick="togglePw('regPassword',this)" type="button">👁️</button>
+          </div>
+          <div class="field-error" id="regPasswordErr">Minimum 8 characters required.</div>
+        </div>
+
+        <button class="btn-submit" id="registerBtn" type="button"><span id="regBtnIcon">🚀 </span><span id="regBtnText">Create Business Account</span></button>
+        <div class="switch-link">Already have an account? <a onclick="showTab('login')">Log in →</a></div>
+      </div>
+
+      <!-- ── SUCCESS SCREEN ── -->
+      <div class="success-screen" id="successScreen">
+        <div class="success-icon" id="successIcon">🎉</div>
+        <h2 id="successTitle">Welcome to BizBridge!</h2>
+        <p id="successMsg">Your account has been created successfully.</p>
+        <div class="redirect-bar">
+          <strong id="redirectPortalName">Redirecting you to your portal…</strong>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--gray);margin-bottom:0.8rem;">Or go directly to any portal:</p>
+        <div class="portal-btn-grid">
+          <a class="portal-btn" onclick="goToPortal('msme-portal.html')"><span class="pb-icon">🏭</span>MSME Portal</a>
+          <a class="portal-btn" onclick="goToPortal('customer-marketplace.html')"><span class="pb-icon">🛍️</span>Marketplace</a>
+          <a class="portal-btn" onclick="goToPortal('supplier-portal.html')"><span class="pb-icon">🔗</span>Supplier Portal</a>
+        </div>
+      </div>
+
+    </div><!-- /auth-box -->
+  </div><!-- /right-panel -->
+
+</div><!-- /page-wrap -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ═══════════════════════════════════════════════
+// BIZBRIDGE UNIFIED DATABASE
+// ═══════════════════════════════════════════════
+const UDB = {
+  _key: 'bb_bizbridge_db',
+  _get: function() {
+    try {
+      return JSON.parse(localStorage.getItem(this._key) || 'null') ||
+        { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] };
+    } catch(e) {
+      return { msmeUsers:[], supplierUsers:[], customerUsers:[], products:{}, listings:{}, customerOrders:{}, cart:[], rfqs:[], supplyOrders:[] };
+    }
+  },
+  _save: function(data) { localStorage.setItem(this._key, JSON.stringify(data)); },
+
+  getMsmeUsers: function() { return this._get().msmeUsers; },
+  saveMsmeUser: function(user) { const d=this._get(); const i=d.msmeUsers.findIndex(u=>u.email===user.email); if(i>=0) d.msmeUsers[i]=user; else d.msmeUsers.push(user); this._save(d); },
+
+  getSupplierUsers: function() { return this._get().supplierUsers; },
+  saveSupplierUser: function(user) { const d=this._get(); const i=d.supplierUsers.findIndex(u=>u.email===user.email); if(i>=0) d.supplierUsers[i]=user; else d.supplierUsers.push(user); this._save(d); },
+
+  getCustomerUsers: function() { return this._get().customerUsers; },
+  saveCustomerUser: function(user) { const d=this._get(); const i=d.customerUsers.findIndex(u=>u.email===user.email); if(i>=0) d.customerUsers[i]=user; else d.customerUsers.push(user); this._save(d); },
+
+  // Unified session key — works across all portals
+  getSession: function() { try { return JSON.parse(localStorage.getItem('bb_session')||'null'); } catch(e) { return null; } },
+  setSession: function(user) { localStorage.setItem('bb_session', JSON.stringify(user)); },
+  clearSession: function() { localStorage.removeItem('bb_session'); },
+
+  getAllUsers: function() {
+    return [
+      ...this.getMsmeUsers().map(u => ({...u, _type:'msme'})),
+      ...this.getSupplierUsers().map(u => ({...u, _type:'supplier'})),
+      ...this.getCustomerUsers().map(u => ({...u, _type:'customer'})),
+    ];
+  }
+};
+
+// Seed demo accounts
+(function seedDemo() {
+  if (!UDB.getMsmeUsers().find(u => u.email === 'demo@bizbridge.in')) {
+    UDB.saveMsmeUser({ firstName:'Demo', lastName:'User', bizName:'BizBridge Demo Co.', gst:'29AADCB2230M1ZP', bizType:'Manufacturer', email:'demo@bizbridge.in', phone:'9876543210', state:'Karnataka', password:'demo1234', createdAt: new Date().toISOString() });
+  }
+})();
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let selectedType = 'msme';
+let returnUrl = null;
+
+// Read ?return= and ?tab= params on load
+(function init() {
+  const params = new URLSearchParams(window.location.search);
+  returnUrl = params.get('return') || null;
+  const tab = params.get('tab');
+  if (tab === 'register') showTab('register');
+
+  // If already logged in, redirect immediately
+  const session = UDB.getSession();
+  if (session) {
+    const dest = returnUrl || defaultPortalFor(session._type || 'msme');
+    window.location.href = dest;
+  }
+})();
+
+function defaultPortalFor(type) {
+  if (type === 'customer') return 'customer-marketplace.html';
+  if (type === 'supplier') return 'supplier-portal.html';
+  return 'msme-portal.html';
+}
+
+function goToPortal(url) {
+  window.location.href = url;
+}
+
+// ═══════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════
+function showTab(tab) {
+  document.getElementById('tabLoginBtn').classList.toggle('active', tab==='login');
+  document.getElementById('tabRegisterBtn').classList.toggle('active', tab==='register');
+  document.getElementById('panelLogin').classList.toggle('active', tab==='login');
+  document.getElementById('panelRegister').classList.toggle('active', tab==='register');
+  document.getElementById('successScreen').classList.remove('show');
+  clearErrors();
+}
+
+// ═══════════════════════════════════════════════
+// ACCOUNT TYPE SELECTION
+// ═══════════════════════════════════════════════
+function selectType(type) {
+  selectedType = type;
+  ['msme','customer','supplier'].forEach(t => {
+    document.getElementById('type-'+t).classList.toggle('selected', t===type);
+    document.getElementById('fields-'+t).classList.toggle('show', t===type);
+  });
+  const icons  = { msme:'🚀', customer:'🛍️', supplier:'🔗' };
+  const texts  = { msme:'Create Business Account', customer:'Create Shopping Account', supplier:'Create Supplier Account' };
+  document.getElementById('regBtnIcon').textContent = icons[type] + ' ';
+  document.getElementById('regBtnText').textContent = texts[type];
+}
+
+// ═══════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════
+function doLogin() {
+  clearErrors();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  let valid = true;
+  if (!email || !email.includes('@')) { showFE('loginEmailErr','loginEmail'); valid=false; }
+  if (!password) { showFE('loginPasswordErr','loginPassword'); valid=false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Logging in…';
+
+  setTimeout(() => {
+    const user = UDB.getAllUsers().find(u => u.email===email && u.password===password);
+    btn.disabled=false; btn.innerHTML='🔐 Log In';
+    if (!user) {
+      showAlert('loginError', '❌ Invalid email or password. Please check your credentials and try again.');
+      return;
+    }
+    UDB.setSession(user);
+    showSuccess(user, false);
+  }, 700);
+}
+
+// ═══════════════════════════════════════════════
+// REGISTER
+// ═══════════════════════════════════════════════
+function doRegister() {
+  clearErrors();
+  const first = document.getElementById('regFirst').value.trim();
+  const last  = document.getElementById('regLast').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pw    = document.getElementById('regPassword').value;
+
+  let valid = true;
+  if (!first) { showFE('regFirstErr','regFirst'); valid=false; }
+  if (!last)  { showFE('regLastErr','regLast');   valid=false; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFE('regEmailErr','regEmail'); valid=false; }
+  const phoneClean = phone.replace(/\s/g,'').replace(/^\+?91/,'');
+  if (!/^[6-9]\d{9}$/.test(phoneClean)) { showFE('regPhoneErr','regPhone'); valid=false; }
+  if (pw.length < 8) { showFE('regPasswordErr','regPassword'); valid=false; }
+
+  // Type-specific validation
+  if (selectedType === 'msme') {
+    const biz  = document.getElementById('regBizName').value.trim();
+    const gst  = document.getElementById('regGST').value.trim();
+    const btype= document.getElementById('regBizType').value;
+    const state= document.getElementById('regStateMsme').value;
+    if (biz.length < 3)    { showFE('regBizNameErr','regBizName'); valid=false; }
+    if (gst.length !== 15) { showFE('regGSTErr','regGST'); valid=false; }
+    if (!btype)            { showFE('regBizTypeErr','regBizType'); valid=false; }
+    if (!state)            { showFE('regStateMsmeErr','regStateMsme'); valid=false; }
+  } else if (selectedType === 'customer') {
+    const city = document.getElementById('regCity').value.trim();
+    if (!city) { showFE('regCityErr','regCity'); valid=false; }
+  } else if (selectedType === 'supplier') {
+    const comp = document.getElementById('regCompany').value.trim();
+    const cat  = document.getElementById('regCategory').value;
+    const st   = document.getElementById('regStateSupplier').value;
+    if (comp.length < 3) { showFE('regCompanyErr','regCompany'); valid=false; }
+    if (!cat)            { showFE('regCategoryErr','regCategory'); valid=false; }
+    if (!st)             { showFE('regStateSupplierErr','regStateSupplier'); valid=false; }
+  }
+  if (!valid) return;
+
+  // Check duplicate across all portals
+  if (UDB.getAllUsers().find(u => u.email===email)) {
+    showAlert('registerError','❌ This email is already registered. Please log in instead.');
+    return;
+  }
+
+  const btn = document.getElementById('registerBtn');
+  btn.disabled=true; btn.textContent='Creating account…';
+
+  setTimeout(() => {
+    let newUser;
+    if (selectedType === 'msme') {
+      newUser = {
+        firstName: first, lastName: last,
+        bizName: document.getElementById('regBizName').value.trim(),
+        gst: document.getElementById('regGST').value.trim().toUpperCase(),
+        bizType: document.getElementById('regBizType').value,
+        state: document.getElementById('regStateMsme').value,
+        email, phone, password: pw,
+        _type: 'msme', createdAt: new Date().toISOString()
+      };
+      UDB.saveMsmeUser(newUser);
+    } else if (selectedType === 'customer') {
+      newUser = {
+        first, last, firstName: first, lastName: last,
+        city: document.getElementById('regCity').value.trim(),
+        email, phone, password: pw,
+        _type: 'customer', createdAt: new Date().toISOString()
+      };
+      UDB.saveCustomerUser(newUser);
+    } else {
+      newUser = {
+        first, last, firstName: first, lastName: last,
+        company: document.getElementById('regCompany').value.trim(),
+        bizName: document.getElementById('regCompany').value.trim(),
+        category: document.getElementById('regCategory').value,
+        state: document.getElementById('regStateSupplier').value,
+        gst: document.getElementById('regSupplierGST').value.trim().toUpperCase(),
+        email, phone, password: pw,
+        _type: 'supplier', createdAt: new Date().toISOString()
+      };
+      UDB.saveSupplierUser(newUser);
+    }
+
+    UDB.setSession(newUser);
+    btn.disabled=false;
+    selectType(selectedType); // restore btn label
+    showSuccess(newUser, true);
+  }, 900);
+}
+
+// ═══════════════════════════════════════════════
+// SUCCESS + REDIRECT
+// ═══════════════════════════════════════════════
+function showSuccess(user, isNew) {
+  const name = user.firstName || user.first || 'there';
+  const type = user._type || 'msme';
+  const dest = returnUrl || defaultPortalFor(type);
+  const portalNames = {
+    'msme-portal.html': 'MSME Portal',
+    'customer-marketplace.html': 'Customer Marketplace',
+    'supplier-portal.html': 'Supplier Portal'
+  };
+  const destName = portalNames[dest] || 'your portal';
+
+  document.getElementById('successIcon').textContent = isNew ? '🎉' : '👋';
+  document.getElementById('successTitle').textContent = isNew ? `Welcome, ${name}!` : `Welcome back, ${name}!`;
+  document.getElementById('successMsg').textContent = isNew
+    ? `Your BizBridge account has been created. You can use these credentials on any portal.`
+    : `You've been logged in successfully.`;
+  document.getElementById('redirectPortalName').textContent = `Redirecting to ${destName}…`;
+
+  // Hide tab panels, show success
+  document.getElementById('panelLogin').classList.remove('active');
+  document.getElementById('panelRegister').classList.remove('active');
+  document.getElementById('successScreen').classList.add('show');
+
+  // Animate progress bar then redirect
+  let progress = 0;
+  const bar = document.getElementById('progressBar');
+  const interval = setInterval(() => {
+    progress += 2;
+    bar.style.width = progress + '%';
+    if (progress >= 100) {
+      clearInterval(interval);
+      window.location.href = dest;
+    }
+  }, 50); // 50ms * 50 steps = 2.5 seconds
+}
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function showFE(errId, inputId) {
+  const el = document.getElementById(errId);
+  if (el) el.classList.add('show');
+  const inp = document.getElementById(inputId);
+  if (inp) inp.classList.add('error');
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent=msg; el.classList.add('show'); }
+}
+
+function clearErrors() {
+  document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.alert').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('input.error, select.error').forEach(e=>e.classList.remove('error'));
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+// ═══════════════════════════════════════════════
+// SAFE EVENT WIRING (avoids Cloudflare onclick stripping)
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  var loginBtn = document.getElementById('loginBtn');
+  if (loginBtn) loginBtn.addEventListener('click', doLogin);
+
+  var registerBtn = document.getElementById('registerBtn');
+  if (registerBtn) registerBtn.addEventListener('click', doRegister);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBridge — Logistics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --primary: #1a3c5e;
+    --accent: #e86c2f;
+    --green: #16a34a;
+    --light: #f0f4f8;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --border: #dde3ea;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--light); color:#1a1a1a; }
+
+  /* NAV */
+  nav {
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:0 5%; display:flex; align-items:center; justify-content:space-between;
+    height:70px; position:sticky; top:0; z-index:1000;
+    box-shadow:0 1px 12px rgba(0,0,0,0.07);
+  }
+  .nav-logo { font-family:'Playfair Display',serif; color:var(--primary); font-size:1.5rem; cursor:pointer; }
+  .nav-logo span { color:var(--accent); }
+  .nav-tag { background:#eef3f8; color:var(--primary); font-size:0.72rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:4px; letter-spacing:1px; text-transform:uppercase; margin-left:0.6rem; }
+  .nav-links { display:flex; gap:2rem; list-style:none; }
+  .nav-links a { color:var(--gray); text-decoration:none; font-size:0.9rem; font-weight:500; transition:color 0.2s; cursor:pointer; }
+  .nav-links a:hover, .nav-links a.active { color:var(--primary); }
+  .nav-right { display:flex; gap:0.8rem; align-items:center; }
+  .nav-avatar { width:36px; height:36px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem; }
+  .nav-username { font-weight:600; color:var(--primary); font-size:0.9rem; }
+  .notif-btn { position:relative; background:var(--light); border:1px solid var(--border); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:var(--accent); border-radius:50%; border:2px solid white; }
+
+  /* PAGE HEADER */
+  .page-header {
+    background:linear-gradient(135deg,#1a3c5e 0%,#0d2440 70%);
+    padding:2.5rem 5% 2rem; display:flex; align-items:center; justify-content:space-between;
+  }
+  .page-header-left h1 { font-family:'Playfair Display',serif; color:white; font-size:1.9rem; margin-bottom:0.3rem; }
+  .page-header-left p { color:rgba(255,255,255,0.6); font-size:0.9rem; }
+  .header-stats { display:flex; gap:1.5rem; }
+  .hstat { text-align:center; }
+  .hstat .val { color:white; font-size:1.5rem; font-weight:700; display:block; }
+  .hstat .lbl { color:rgba(255,255,255,0.5); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.8px; }
+  .hstat-divider { width:1px; background:rgba(255,255,255,0.15); }
+
+  /* MAIN LAYOUT */
+  .main { display:grid; grid-template-columns:1fr 420px; gap:1.5rem; padding:1.8rem 5%; }
+
+  /* MAP PANEL */
+  .map-panel { background:var(--white); border-radius:14px; border:1px solid var(--border); overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+  .panel-header { padding:1.1rem 1.4rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .panel-title { font-weight:700; color:var(--primary); font-size:0.95rem; display:flex; align-items:center; gap:0.5rem; }
+  .live-badge { background:rgba(22,163,74,0.12); color:#16a34a; font-size:0.7rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:10px; display:flex; align-items:center; gap:0.3rem; }
+  .live-dot { width:6px; height:6px; background:#16a34a; border-radius:50%; animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+  #map { height:420px; width:100%; }
+
+  /* MAP LEGEND */
+  .map-legend { padding:0.9rem 1.4rem; background:#fafbfc; border-top:1px solid var(--border); display:flex; gap:1.5rem; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:var(--gray); font-weight:500; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; }
+
+  /* MAP FILTERS */
+  .map-filters { padding:0.8rem 1.4rem; border-bottom:1px solid var(--border); display:flex; gap:0.5rem; flex-wrap:wrap; }
+  .filter-chip { background:var(--light); border:1.5px solid var(--border); color:var(--gray); padding:0.3rem 0.85rem; border-radius:20px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .filter-chip.active { background:var(--primary); color:white; border-color:var(--primary); }
+  .filter-chip:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+
+  /* ORDERS PANEL */
+  .orders-panel { background:var(--white); border-radius:14px; border:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.06); display:flex; flex-direction:column; max-height:600px; }
+  .orders-search { padding:0.9rem 1.4rem; border-bottom:1px solid var(--border); }
+  .search-input { width:100%; background:var(--light); border:1px solid var(--border); border-radius:8px; padding:0.55rem 0.9rem 0.55rem 2.4rem; font-family:'DM Sans',sans-serif; font-size:0.85rem; color:#1a1a1a; outline:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%236b7280' viewBox='0 0 24 24'%3E%3Cpath d='M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z' stroke='%236b7280' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:0.75rem center; }
+  .search-input:focus { border-color:var(--primary); }
+  .orders-list { overflow-y:auto; flex:1; }
+  .orders-list::-webkit-scrollbar { width:4px; }
+  .orders-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+  /* ORDER CARD */
+  .order-card { padding:1rem 1.4rem; border-bottom:1px solid #f0f2f5; cursor:pointer; transition:background 0.15s; display:flex; gap:0.9rem; align-items:flex-start; }
+  .order-card:hover { background:#f8f9fb; }
+  .order-card.selected { background:#eef3f8; border-left:3px solid var(--primary); }
+  .order-icon { width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; margin-top:2px; }
+  .order-info { flex:1; min-width:0; }
+  .order-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.2rem; }
+  .order-id { font-weight:700; color:var(--primary); font-size:0.85rem; }
+  .order-amount { font-weight:700; color:#1a1a1a; font-size:0.85rem; }
+  .order-product { color:var(--gray); font-size:0.8rem; margin-bottom:0.35rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .order-meta { display:flex; justify-content:space-between; align-items:center; }
+  .order-dest { color:#888; font-size:0.75rem; display:flex; align-items:center; gap:0.25rem; }
+  .status-badge { font-size:0.7rem; font-weight:700; padding:0.18rem 0.55rem; border-radius:20px; white-space:nowrap; }
+  .status-delivered { background:rgba(22,163,74,0.12); color:#16a34a; }
+  .status-transit { background:rgba(59,130,246,0.12); color:#3b82f6; }
+  .status-processing { background:rgba(232,108,47,0.15); color:#e86c2f; }
+  .status-pending { background:rgba(245,158,11,0.15); color:#d97706; }
+  .status-cancelled { background:rgba(239,68,68,0.1); color:#ef4444; }
+
+  /* STATS ROW */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .stat-card { background:var(--white); border-radius:12px; border:1px solid var(--border); padding:1.1rem 1.3rem; box-shadow:0 1px 6px rgba(0,0,0,0.04); }
+  .stat-card .s-val { font-size:1.7rem; font-weight:700; color:var(--primary); display:block; line-height:1.1; }
+  .stat-card .s-lbl { color:var(--gray); font-size:0.76rem; margin-top:0.2rem; }
+  .stat-card .s-chg { font-size:0.75rem; font-weight:600; margin-top:0.4rem; }
+  .chg-up { color:#16a34a; }
+  .chg-down { color:#ef4444; }
+
+  /* ORDER DETAIL DRAWER */
+  .detail-drawer {
+    position:fixed; right:0; top:70px; bottom:0; width:380px; background:var(--white);
+    border-left:1px solid var(--border); box-shadow:-4px 0 24px rgba(0,0,0,0.1);
+    transform:translateX(100%); transition:transform 0.3s ease; z-index:900;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .detail-drawer.open { transform:translateX(0); }
+  .drawer-header { padding:1.3rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .drawer-title { font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--primary); }
+  .drawer-close { background:var(--light); border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:var(--gray); }
+  .drawer-body { flex:1; overflow-y:auto; padding:1.5rem; }
+
+  /* TIMELINE */
+  .timeline { position:relative; }
+  .timeline::before { content:''; position:absolute; left:15px; top:0; bottom:0; width:2px; background:var(--border); }
+  .tl-item { display:flex; gap:1rem; margin-bottom:1.4rem; position:relative; }
+  .tl-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; flex-shrink:0; z-index:1; border:2px solid white; box-shadow:0 0 0 2px var(--border); }
+  .tl-dot.done { background:#16a34a; color:white; box-shadow:0 0 0 2px rgba(22,163,74,0.25); }
+  .tl-dot.active { background:var(--accent); color:white; box-shadow:0 0 0 2px rgba(232,108,47,0.25); animation:glow 2s infinite; }
+  @keyframes glow { 0%,100%{box-shadow:0 0 0 2px rgba(232,108,47,0.25)}50%{box-shadow:0 0 0 5px rgba(232,108,47,0.15)} }
+  .tl-dot.pending { background:#e5e7eb; color:#9ca3af; }
+  .tl-content .tl-title { font-weight:600; font-size:0.88rem; color:#1a1a1a; }
+  .tl-content .tl-time { color:var(--gray); font-size:0.77rem; margin-top:0.1rem; }
+  .tl-content .tl-desc { color:#888; font-size:0.78rem; margin-top:0.25rem; line-height:1.4; }
+
+  /* INFO ROWS */
+  .info-section { margin-bottom:1.5rem; }
+  .info-section h4 { font-size:0.75rem; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.8rem; }
+  .info-row { display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #f5f6f8; font-size:0.84rem; }
+  .info-row:last-child { border:none; }
+  .info-row .key { color:var(--gray); }
+  .info-row .val { font-weight:600; color:#1a1a1a; text-align:right; }
+
+  /* PARTNER CARD */
+  .partner-card { background:var(--light); border-radius:10px; padding:1rem; display:flex; gap:0.9rem; align-items:center; margin-bottom:1rem; }
+  .partner-logo { width:42px; height:42px; border-radius:10px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; }
+  .partner-info .name { font-weight:700; font-size:0.88rem; color:#1a1a1a; }
+  .partner-info .sub { color:var(--gray); font-size:0.78rem; }
+
+  /* TABS */
+  .tab-bar { display:flex; gap:0; border-bottom:1px solid var(--border); background:var(--white); }
+  .tab { flex:1; text-align:center; padding:0.8rem; font-size:0.82rem; font-weight:600; color:var(--gray); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; }
+  .tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--gray); }
+  .empty-state .icon { font-size:2.5rem; margin-bottom:0.8rem; opacity:0.4; }
+  .empty-state p { font-size:0.85rem; }
+
+  /* ACTION BTNS */
+  .action-row { display:flex; gap:0.7rem; padding:1rem 1.5rem; border-top:1px solid var(--border); }
+  .btn-primary { flex:1; background:var(--accent); color:white; border:none; padding:0.7rem; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer; transition:background 0.2s; }
+  .btn-primary:hover { background:#d05a20; }
+  .btn-secondary { background:var(--light); color:var(--primary); border:1px solid var(--border); padding:0.7rem 1.2rem; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.85rem; cursor:pointer; transition:all 0.2s; }
+  .btn-secondary:hover { border-color:var(--primary); }
+
+  /* LEAFLET CUSTOM */
+  .custom-marker { width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.25); }
+  .custom-marker span { transform:rotate(45deg); font-size:0.7rem; }
+  .leaflet-popup-content-wrapper { border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.15); border:1px solid var(--border); }
+  .leaflet-popup-content { margin:12px 16px; }
+  .popup-title { font-weight:700; color:var(--primary); font-size:0.88rem; margin-bottom:0.3rem; }
+  .popup-sub { color:var(--gray); font-size:0.78rem; }
+  .popup-status { display:inline-block; margin-top:0.4rem; font-size:0.72rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:4px; }
+
+  @media(max-width:1100px){
+    .main { grid-template-columns:1fr; }
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+    .detail-drawer { width:100%; top:auto; bottom:0; height:80vh; transform:translateY(100%); border-left:none; border-top:1px solid var(--border); }
+    .detail-drawer.open { transform:translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div style="display:flex;align-items:center">
+    <div class="nav-logo">Biz<span>Bridge</span></div>
+    <span class="nav-tag">Logistics</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#">Dashboard</a></li>
+    <li><a href="#" class="active">My Orders</a></li>
+    <li><a href="#">Suppliers</a></li>
+    <li><a href="#">Finance</a></li>
+    <li><a href="#">Compliance</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="notif-btn">🔔<span class="notif-dot"></span></div>
+    <div class="nav-avatar">RK</div>
+    <div class="nav-username">Ravi Kumar</div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Logistics Dashboard</h1>
+    <p>Track all shipments · Manage deliveries · Monitor partners</p>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><span class="val">24</span><span class="lbl">Active</span></div>
+    <div class="hstat-divider"></div>
+    <div class="hstat"><span class="val">7</span><span class="lbl">In Transit</span></div>
+    <div class="hstat-divider"></div>
+    <div class="hstat"><span class="val">3</span><span class="lbl">Delayed</span></div>
+    <div class="hstat-divider"></div>
+    <div class="hstat"><span class="val">₹4.2L</span><span class="lbl">This Month</span></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div style="padding:1.8rem 5% 0">
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="s-val">142</span>
+      <div class="s-lbl">Total Orders (30d)</div>
+      <div class="s-chg chg-up">↑ 18% vs last month</div>
+    </div>
+    <div class="stat-card">
+      <span class="s-val">94.2%</span>
+      <div class="s-lbl">On-Time Delivery Rate</div>
+      <div class="s-chg chg-up">↑ 2.1% improvement</div>
+    </div>
+    <div class="stat-card">
+      <span class="s-val">1.8d</span>
+      <div class="s-lbl">Avg. Delivery Time</div>
+      <div class="s-chg chg-up">↓ 0.4d faster</div>
+    </div>
+    <div class="stat-card">
+      <span class="s-val">₹248</span>
+      <div class="s-lbl">Avg. Shipping Cost</div>
+      <div class="s-chg chg-down">↑ ₹12 vs last month</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- LEFT: MAP + ORDER LIST -->
+  <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+    <!-- MAP PANEL -->
+    <div class="map-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          📍 Live Shipment Map
+          <span class="live-badge"><span class="live-dot"></span>Live</span>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <select id="mapRegion" style="font-family:'DM Sans',sans-serif;font-size:0.78rem;border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;color:var(--gray);background:var(--light);cursor:pointer;outline:none;" onchange="filterMapOrders()">
+            <option value="all">All India</option>
+            <option value="south">South India</option>
+            <option value="north">North India</option>
+            <option value="west">West India</option>
+          </select>
+        </div>
+      </div>
+      <div class="map-filters">
+        <div class="filter-chip active" onclick="toggleFilter(this,'all')">All (24)</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'transit')">🚛 In Transit (7)</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'delivered')">✅ Delivered (12)</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'processing')">⚙️ Processing (3)</div>
+        <div class="filter-chip" onclick="toggleFilter(this,'pending')">⏳ Pending (2)</div>
+      </div>
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>In Transit</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Delivered</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e86c2f"></div>Processing</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Pending</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Cancelled</div>
+        <div class="legend-item" style="margin-left:auto;color:#888;font-size:0.75rem;">📍 Click markers for details</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: ORDERS LIST -->
+  <div class="orders-panel">
+    <div class="panel-header">
+      <div class="panel-title">📦 Order List</div>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <span style="font-size:0.75rem;color:var(--gray)">Sort:</span>
+        <select id="sortOrders" style="font-family:'DM Sans',sans-serif;font-size:0.78rem;border:1px solid var(--border);border-radius:6px;padding:0.28rem 0.6rem;color:var(--gray);background:var(--light);cursor:pointer;outline:none;" onchange="renderOrders()">
+          <option value="date">Latest</option>
+          <option value="amount">Amount</option>
+          <option value="status">Status</option>
+        </select>
+      </div>
+    </div>
+    <div class="orders-search">
+      <input class="search-input" type="text" id="orderSearch" placeholder="Search order ID, product, destination…" oninput="renderOrders()">
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="setTab(this,'all')">All</div>
+      <div class="tab" onclick="setTab(this,'active')">Active</div>
+      <div class="tab" onclick="setTab(this,'completed')">Completed</div>
+      <div class="tab" onclick="setTab(this,'issues')">Issues</div>
+    </div>
+    <div class="orders-list" id="ordersList"></div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL DRAWER -->
+<div class="detail-drawer" id="detailDrawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawerTitle">Order Details</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="action-row">
+    <button class="btn-secondary" onclick="closeDrawer()">← Back</button>
+    <button class="btn-primary" onclick="contactPartner()">📞 Contact Partner</button>
+  </div>
+</div>
+
+<div id="drawerOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:899;" onclick="closeDrawer()"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const ORDERS = [
+  { id:'BB-2406-0089', product:'Steel Rods (500kg)', customer:'Vinod Engineering', dest:'Mumbai, MH', lat:19.076, lng:72.877, status:'transit', amount:48500, partner:'Delhivery', date:'2024-06-12', eta:'Jun 14', icon:'🔩', awb:'DL4490823', weight:'500 kg', vol:'2.1 m³', payment:'COD' },
+  { id:'BB-2406-0088', product:'Cotton Fabric Rolls', customer:'Priya Textiles', dest:'Surat, GJ', lat:21.170, lng:72.831, status:'delivered', amount:32000, partner:'Blue Dart', date:'2024-06-11', eta:'Delivered Jun 13', icon:'🧵', awb:'BD7732981', weight:'180 kg', vol:'0.8 m³', payment:'Prepaid' },
+  { id:'BB-2406-0087', product:'Plastic Granules (1T)', customer:'Sunrise Plastics', dest:'Pune, MH', lat:18.520, lng:73.856, status:'processing', amount:67200, partner:'Gati', date:'2024-06-11', eta:'Jun 15', icon:'🧪', awb:'GA9912345', weight:'1000 kg', vol:'4.2 m³', payment:'Net-30' },
+  { id:'BB-2406-0086', product:'Electronic Components', customer:'TechMart Chennai', dest:'Chennai, TN', lat:13.083, lng:80.270, status:'transit', amount:24800, partner:'FedEx', date:'2024-06-10', eta:'Jun 13', icon:'⚡', awb:'FX2210039', weight:'42 kg', vol:'0.3 m³', payment:'Prepaid' },
+  { id:'BB-2406-0085', product:'Wooden Pallets (20pc)', customer:'Buildmart India', dest:'Hyderabad, TS', lat:17.385, lng:78.487, status:'delivered', amount:18400, partner:'Rivigo', date:'2024-06-10', eta:'Delivered Jun 12', icon:'🪵', awb:'RV5510293', weight:'320 kg', vol:'3.5 m³', payment:'COD' },
+  { id:'BB-2406-0084', product:'Chemical Drums (50L)', customer:'AgroSynth Ltd', dest:'Nagpur, MH', lat:21.145, lng:79.082, status:'transit', amount:55000, partner:'TCI Express', date:'2024-06-09', eta:'Jun 14', icon:'🧴', awb:'TC8801234', weight:'600 kg', vol:'2.8 m³', payment:'Net-30' },
+  { id:'BB-2406-0083', product:'Machinery Parts', customer:'Precision Works', dest:'Coimbatore, TN', lat:11.017, lng:76.955, status:'pending', amount:91500, partner:'Pending', date:'2024-06-09', eta:'TBD', icon:'⚙️', awb:'—', weight:'850 kg', vol:'3.9 m³', payment:'Advance' },
+  { id:'BB-2406-0082', product:'Aluminium Sheets', customer:'Metro Fabrications', dest:'Delhi, DL', lat:28.704, lng:77.103, status:'transit', amount:43200, partner:'Delhivery', date:'2024-06-08', eta:'Jun 13', icon:'🏗️', awb:'DL4481222', weight:'740 kg', vol:'2.2 m³', payment:'Prepaid' },
+  { id:'BB-2406-0081', product:'Organic Pigments', customer:'ColorCraft Inks', dest:'Ahmedabad, GJ', lat:23.023, lng:72.572, status:'delivered', amount:27600, partner:'Blue Dart', date:'2024-06-08', eta:'Delivered Jun 11', icon:'🎨', awb:'BD7700445', weight:'95 kg', vol:'0.5 m³', payment:'COD' },
+  { id:'BB-2406-0080', product:'Rubber Belts (Bulk)', customer:'IndoAuto Components', dest:'Bengaluru, KA', lat:12.971, lng:77.595, status:'delivered', amount:38900, partner:'Gati', date:'2024-06-07', eta:'Delivered Jun 10', icon:'🔧', awb:'GA9900988', weight:'480 kg', vol:'2.0 m³', payment:'Net-30' },
+  { id:'BB-2406-0079', product:'PVC Pipes (200m)', customer:'BuildPro Kerala', dest:'Kochi, KL', lat:9.939, lng:76.270, status:'transit', amount:21000, partner:'Rivigo', date:'2024-06-07', eta:'Jun 14', icon:'🚿', awb:'RV5508871', weight:'410 kg', vol:'5.1 m³', payment:'COD' },
+  { id:'BB-2406-0078', product:'Stainless Steel Wire', customer:'Ferro Industries', dest:'Kolkata, WB', lat:22.572, lng:88.363, status:'processing', amount:33700, partner:'TCI Express', date:'2024-06-06', eta:'Jun 16', icon:'🔗', awb:'TC8799012', weight:'220 kg', vol:'0.9 m³', payment:'Prepaid' },
+  { id:'BB-2406-0077', product:'Spare Bearings Kit', customer:'AutoMax Jaipur', dest:'Jaipur, RJ', lat:26.912, lng:75.787, status:'pending', amount:15200, partner:'Pending', date:'2024-06-06', eta:'TBD', icon:'🎯', awb:'—', weight:'85 kg', vol:'0.4 m³', payment:'Advance' },
+  { id:'BB-2406-0076', product:'Hydraulic Cylinders', customer:'PowerPulse Machines', dest:'Ludhiana, PB', lat:30.901, lng:75.857, status:'transit', amount:78400, partner:'FedEx', date:'2024-06-05', eta:'Jun 13', icon:'💡', awb:'FX2208844', weight:'390 kg', vol:'1.8 m³', payment:'Net-30' },
+  { id:'BB-2406-0075', product:'Ceramic Tiles (Pallet)', customer:'HomeDeco Retail', dest:'Surat, GJ', lat:21.180, lng:72.840, status:'delivered', amount:29100, partner:'Delhivery', date:'2024-06-05', eta:'Delivered Jun 09', icon:'🏠', awb:'DL4460010', weight:'900 kg', vol:'3.4 m³', payment:'COD' },
+];
+
+const statusColors = { transit:'#3b82f6', delivered:'#16a34a', processing:'#e86c2f', pending:'#f59e0b', cancelled:'#ef4444' };
+const statusLabels = { transit:'In Transit', delivered:'Delivered', processing:'Processing', pending:'Pending', cancelled:'Cancelled' };
+
+let selectedOrderId = null;
+let activeTab = 'all';
+let activeFilter = 'all';
+let mapMarkers = [];
+let map;
+
+// ─── MAP INIT ────────────────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', { zoomControl:true, scrollWheelZoom:true }).setView([20.5937, 78.9629], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '©OpenStreetMap ©CARTO', maxZoom:18
+  }).addTo(map);
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  mapMarkers.forEach(m => map.removeLayer(m));
+  mapMarkers = [];
+  const filtered = getFilteredOrders();
+  filtered.forEach(o => {
+    const color = statusColors[o.status] || '#888';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+      <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24s16-14 16-24C32 7.163 24.837 0 16 0z" fill="${color}" opacity="0.9"/>
+      <circle cx="16" cy="16" r="8" fill="white" opacity="0.9"/>
+      <text x="16" y="20" text-anchor="middle" font-size="10">${o.icon}</text>
+    </svg>`;
+    const icon = L.divIcon({
+      html: svg, className:'', iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-42]
+    });
+    const statusBg = { transit:'rgba(59,130,246,0.1)', delivered:'rgba(22,163,74,0.1)', processing:'rgba(232,108,47,0.12)', pending:'rgba(245,158,11,0.12)' }[o.status]||'#eee';
+    const statusTxt = statusColors[o.status]||'#666';
+    const popup = `<div style="min-width:170px">
+      <div class="popup-title">${o.product}</div>
+      <div class="popup-sub">📦 ${o.id}</div>
+      <div class="popup-sub">📍 ${o.dest}</div>
+      <div class="popup-sub">🚚 ${o.partner !== 'Pending' ? o.partner : 'Awaiting assignment'}</div>
+      <div class="popup-status" style="background:${statusBg};color:${statusTxt}">${statusLabels[o.status]}</div>
+      <div style="margin-top:0.6rem"><button onclick="openOrderFromMap('${o.id}')" style="background:#1a3c5e;color:white;border:none;padding:0.35rem 0.9rem;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">View Details →</button></div>
+    </div>`;
+    const marker = L.marker([o.lat, o.lng], { icon }).addTo(map).bindPopup(popup);
+    marker.on('click', () => { marker.openPopup(); highlightOrder(o.id); });
+    mapMarkers.push(marker);
+  });
+}
+
+function filterMapOrders() { renderMapMarkers(); }
+
+function toggleFilter(el, filter) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = filter;
+  renderMapMarkers();
+  renderOrders();
+}
+
+// ─── ORDERS RENDERING ────────────────────────────────────────────────────────
+function getFilteredOrders() {
+  let orders = [...ORDERS];
+  if (activeFilter !== 'all') orders = orders.filter(o => o.status === activeFilter);
+  if (activeTab === 'active') orders = orders.filter(o => ['transit','processing','pending'].includes(o.status));
+  if (activeTab === 'completed') orders = orders.filter(o => o.status === 'delivered');
+  if (activeTab === 'issues') orders = orders.filter(o => ['pending','cancelled'].includes(o.status));
+  const q = document.getElementById('orderSearch').value.toLowerCase();
+  if (q) orders = orders.filter(o => o.id.toLowerCase().includes(q) || o.product.toLowerCase().includes(q) || o.dest.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q));
+  const sort = document.getElementById('sortOrders').value;
+  if (sort === 'amount') orders.sort((a,b) => b.amount - a.amount);
+  else if (sort === 'status') orders.sort((a,b) => a.status.localeCompare(b.status));
+  return orders;
+}
+
+function renderOrders() {
+  const list = document.getElementById('ordersList');
+  const orders = getFilteredOrders();
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No orders match your filter.</p></div>`;
+    return;
+  }
+  list.innerHTML = orders.map(o => `
+    <div class="order-card ${selectedOrderId===o.id?'selected':''}" id="card-${o.id}" onclick="openDrawer('${o.id}')">
+      <div class="order-icon" style="background:${statusColors[o.status]}18">${o.icon}</div>
+      <div class="order-info">
+        <div class="order-top">
+          <div class="order-id">${o.id}</div>
+          <div class="order-amount">₹${o.amount.toLocaleString('en-IN')}</div>
+        </div>
+        <div class="order-product">${o.product}</div>
+        <div class="order-meta">
+          <div class="order-dest">📍 ${o.dest} · ${o.partner !== 'Pending' ? o.partner : '⏳ Pending'}</div>
+          <span class="status-badge status-${o.status}">${statusLabels[o.status]}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeTab = tab;
+  renderOrders();
+}
+
+function highlightOrder(id) {
+  document.querySelectorAll('.order-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('card-'+id);
+  if (card) { card.classList.add('selected'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+}
+
+function openOrderFromMap(id) { openDrawer(id); }
+
+// ─── DRAWER ──────────────────────────────────────────────────────────────────
+function openDrawer(id) {
+  selectedOrderId = id;
+  const o = ORDERS.find(x => x.id === id);
+  if (!o) return;
+  renderOrders();
+  document.getElementById('drawerTitle').textContent = o.id;
+  const timelines = {
+    transit: [
+      { icon:'✅', state:'done', title:'Order Confirmed', time:'Jun '+o.date.split('-')[2]+', 10:23 AM', desc:'Order placed & payment verified.' },
+      { icon:'✅', state:'done', title:'Picked Up', time:'Jun '+o.date.split('-')[2]+', 3:47 PM', desc:'Shipment collected from warehouse.' },
+      { icon:'✅', state:'done', title:'In-Facility Scan', time:'Jun '+(parseInt(o.date.split('-')[2])+1)+', 7:12 AM', desc:'Package scanned at '+o.partner+' hub.' },
+      { icon:'🚛', state:'active', title:'Out for Delivery', time:'Expected today', desc:'En route to '+o.dest+'.' },
+      { icon:'📦', state:'pending', title:'Delivered', time:o.eta, desc:'Estimated arrival.' }
+    ],
+    delivered: [
+      { icon:'✅', state:'done', title:'Order Confirmed', time:'Jun '+o.date.split('-')[2]+', 10:00 AM', desc:'Order placed & payment verified.' },
+      { icon:'✅', state:'done', title:'Picked Up', time:'Jun '+o.date.split('-')[2]+', 2:30 PM', desc:'Shipment collected from warehouse.' },
+      { icon:'✅', state:'done', title:'In Transit', time:'Jun '+(parseInt(o.date.split('-')[2])+1)+', 9:00 AM', desc:'Package in transit.' },
+      { icon:'✅', state:'done', title:'Delivered', time:o.eta, desc:'Successfully delivered to '+o.customer+'.' }
+    ],
+    processing: [
+      { icon:'✅', state:'done', title:'Order Confirmed', time:'Jun '+o.date.split('-')[2]+', 11:15 AM', desc:'Order placed & payment verified.' },
+      { icon:'⚙️', state:'active', title:'Processing at Warehouse', time:'In progress', desc:'Packing and quality check underway.' },
+      { icon:'🚛', state:'pending', title:'Pickup Scheduled', time:o.eta, desc:'Logistics partner to be assigned.' },
+      { icon:'📦', state:'pending', title:'Delivered', time:'~'+o.eta, desc:'Estimated delivery.' }
+    ],
+    pending: [
+      { icon:'⏳', state:'active', title:'Awaiting Confirmation', time:'Jun '+o.date.split('-')[2], desc:'Order under review by finance team.' },
+      { icon:'⚙️', state:'pending', title:'Processing', time:'TBD', desc:'Warehouse processing.' },
+      { icon:'🚛', state:'pending', title:'Pickup', time:'TBD', desc:'Logistics partner not yet assigned.' },
+      { icon:'📦', state:'pending', title:'Delivered', time:'TBD', desc:'ETA to be confirmed.' }
+    ]
+  };
+  const tl = timelines[o.status] || timelines.pending;
+  const statusBg = { transit:'rgba(59,130,246,0.1)', delivered:'rgba(22,163,74,0.1)', processing:'rgba(232,108,47,0.1)', pending:'rgba(245,158,11,0.1)' }[o.status]||'#eee';
+  const statusTxt = statusColors[o.status];
+  document.getElementById('drawerBody').innerHTML = `
+    <div style="background:${statusBg};border-radius:10px;padding:1rem 1.2rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:1.5rem;margin-bottom:0.2rem">${o.icon}</div>
+        <div style="font-weight:700;font-size:0.9rem;color:#1a1a1a">${o.product}</div>
+        <div style="color:var(--gray);font-size:0.8rem">${o.customer}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:800;font-size:1.3rem;color:var(--primary)">₹${o.amount.toLocaleString('en-IN')}</div>
+        <span class="status-badge status-${o.status}" style="font-size:0.75rem">${statusLabels[o.status]}</span>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h4>Shipment Details</h4>
+      <div class="info-row"><span class="key">AWB / Tracking</span><span class="val">${o.awb}</span></div>
+      <div class="info-row"><span class="key">Destination</span><span class="val">📍 ${o.dest}</span></div>
+      <div class="info-row"><span class="key">ETA</span><span class="val">${o.eta}</span></div>
+      <div class="info-row"><span class="key">Weight</span><span class="val">${o.weight}</span></div>
+      <div class="info-row"><span class="key">Volume</span><span class="val">${o.vol}</span></div>
+      <div class="info-row"><span class="key">Payment Mode</span><span class="val">${o.payment}</span></div>
+    </div>
+
+    ${o.partner !== 'Pending' ? `
+    <div class="info-section">
+      <h4>Logistics Partner</h4>
+      <div class="partner-card">
+        <div class="partner-logo">${o.partner.slice(0,2).toUpperCase()}</div>
+        <div class="partner-info">
+          <div class="name">${o.partner}</div>
+          <div class="sub">Track: <a href="#" style="color:var(--primary);font-weight:600">${o.awb}</a></div>
+        </div>
+      </div>
+    </div>` : `
+    <div class="info-section">
+      <h4>Logistics Partner</h4>
+      <div style="background:#fff8f0;border:1px solid #ffd4b0;border-radius:10px;padding:1rem;font-size:0.83rem;color:#c2510f">⏳ Partner assignment pending. Estimated allocation in 2–4 hours.</div>
+    </div>`}
+
+    <div class="info-section">
+      <h4>Shipment Timeline</h4>
+      <div class="timeline">
+        ${tl.map(t => `
+        <div class="tl-item">
+          <div class="tl-dot ${t.state}">${t.icon}</div>
+          <div class="tl-content">
+            <div class="tl-title">${t.title}</div>
+            <div class="tl-time">${t.time}</div>
+            <div class="tl-desc">${t.desc}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('detailDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').style.display = 'block';
+
+  // Fly map to order
+  map.flyTo([o.lat, o.lng], 8, { animate:true, duration:1 });
+}
+
+function closeDrawer() {
+  selectedOrderId = null;
+  document.getElementById('detailDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').style.display = 'none';
+  renderOrders();
+  map.flyTo([20.5937, 78.9629], 5, { animate:true, duration:1 });
+}
+
+function contactPartner() {
+  const o = ORDERS.find(x => x.id === selectedOrderId);
+  if (o) alert(`Connecting to ${o.partner} for order ${o.id}…\n\nIn the full app, this opens a live chat or call with your logistics partner.`);
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+window.onload = () => { initMap(); renderOrders(); };
+</script>
+</body>
+</html>
